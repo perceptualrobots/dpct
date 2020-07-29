@@ -1,5 +1,5 @@
 # Deep PCT
-> Summary description here.
+> A library for combining Deep Learning and Perceptual Control Theory reorganisation.
 
 
 This file will become your README and also the index of your documentation.
