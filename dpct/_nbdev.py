@@ -2,9 +2,11 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"say_hello": "00_core.ipynb"}
+index = {"say_hello": "00_core.ipynb",
+         "say_hello_func": "01_funcs.ipynb"}
 
-modules = ["core.py"]
+modules = ["core.py",
+           "funcs.py"]
 
 doc_url = "https://perceptualrobots.github.io/dpct/"
 
