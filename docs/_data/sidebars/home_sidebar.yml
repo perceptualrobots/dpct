@@ -11,7 +11,10 @@ entries:
       url: /
     - output: web,pdf
       title: dpct
-      url: /core
+      url: core.html
+    - output: web,pdf
+      title: funcs
+      url: funcs.html
     output: web
     title: dpct
   output: web
