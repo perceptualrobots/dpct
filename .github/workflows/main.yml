@@ -11,7 +11,11 @@ jobs:
         architecture: 'x64'
     - name: Install the library
       run: |
+<<<<<<< HEAD
         pip install nbdev==0.2.20 jupyter
+=======
+        pip install nbdev jupyter
+>>>>>>> 0caa89e18af57875d642d601aa96ab73dd676c5b
         pip install -e .
     - name: Read all notebooks
       run: |
