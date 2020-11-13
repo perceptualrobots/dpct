@@ -1,14 +1,7 @@
-<<<<<<< HEAD
-{
-  "dpct": {
-    "Overview": "/"
-  }
-=======
 {
   "dpct": {
     "Overview": "/",
     "dpct": "/core",
     "funcs": "/funcs"
   }
->>>>>>> 0caa89e18af57875d642d601aa96ab73dd676c5b
 }
