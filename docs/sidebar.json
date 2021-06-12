@@ -1,7 +1,7 @@
 {
   "dpct": {
     "Overview": "/",
-    "dpct": "/core",
-    "funcs": "/funcs"
+    "dpct": "core.html",
+    "funcs": "funcs.html"
   }
 }
