@@ -1,0 +1,9 @@
+project:
+  output-dir: docs
+
+website:
+  title: "dpct"
+  site-url: "https://perceptualrobots.github.io/dpct/"
+  description: "A library for combining Deep Learning and Perceptual Control Theory reorganisation"
+  repo-branch: master
+  repo-url: "https://github.com/perceptualrobots/dpct/tree/master/"
