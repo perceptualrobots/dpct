@@ -25,7 +25,7 @@ This library merges concepts from Deep Learning and PCT to create adaptable cont
 
 ### 2.3 Required Dependencies
 ```
-pip install nbdev tensorflow gym deap numpy matplotlib
+pip install nbdev tensorflow gym deap numpy matplotlib optuna
 ```
 
 ### 2.4 Development Workflow
@@ -54,7 +54,6 @@ class DHPCTIndividual:
         
         Parameters:
         - env_name: String identifier for the environment
-        - gym_name: Name of the OpenAI Gym environment
         - env_props: Additional environment properties
         - levels: Array of column sizes for each level in the hierarchy
         - activation_funcs: Dict mapping levels to activation functions
@@ -70,13 +69,19 @@ class DHPCTIndividual:
     def compile(self):
         """Build the environment and Keras model"""
         pass
-        
-    def config(self):
+          def config(self):
         """Return a dictionary of the individual's properties"""
         pass
         
     def run(self, steps, train=False, early_termination=False):
-        """Run the individual in its environment"""
+        """
+        Run the individual in its environment
+        
+        Parameters:
+        - steps: Number of timesteps to run
+        - train: Whether to enable online learning during execution
+        - early_termination: Whether to terminate early based on environment signals
+        """
         pass
         
     # Evolution methods
@@ -94,7 +99,7 @@ class DHPCTIndividual:
 ```
 
 #### 3.1.3 Hierarchical Structure
-The PCT hierarchy consists of:
+The hierarchical part of the individual:
 - **Perceptual Inputs**: Environment observations fed into the first level
 - **Reference Inputs**: External inputs to higher levels
 - **Multiple Levels**: Each with perception, reference, comparator, and output layers
@@ -124,7 +129,7 @@ class DHPCTEvolver:
                  generations=100,
                  evolve_termination=None,
                  evolve_static_termination=None,
-                 unchanged_generations=10,
+                 unchanged_generations=5,
                  run_best=True,
                  save_arch_best=True,
                  save_arch_all=False):
@@ -153,15 +158,103 @@ class DHPCTEvolver:
 - Early termination based on fitness target or stagnation
 - Detailed logging and visualization of evolutionary progress
 
+### 3.3 DHPCTOptimizer Class
+
+#### 3.3.1 Overview
+`DHPCTOptimizer` uses Optuna to perform hyperparameter optimization on the evolution process, allowing for efficient search of optimal evolutionary parameters.
+
+#### 3.3.2 Class Structure
+```python
+class DHPCTOptimizer:
+    def __init__(self, 
+                 evolution_params, 
+                 n_trials=100, 
+                 timeout=None, 
+                 pruner=None, 
+                 sampler=None,
+                 study_name=None,
+                 storage=None):
+        """
+        Initialize the optimizer with configuration parameters.
+        
+        Parameters:
+        - evolution_params: Dictionary of parameters for evolution, each with a 'fixed' flag
+                           If fixed=True, the parameter is not optimized and the provided value is used
+                           If fixed=False, the parameter is optimized within the specified range
+        - n_trials: Number of optimization trials to run
+        - timeout: Maximum time for optimization in seconds
+        - pruner: Optuna pruner instance
+        - sampler: Optuna sampler instance
+        - study_name: Name for the Optuna study
+        - storage: Optuna storage URL
+        """
+        pass
+        
+    def define_objective(self, template_individual, fitness_function, evaluation_budget=None):
+        """Define the objective function for Optuna to optimize"""
+        pass
+        
+    def run_optimization(self, verbose=True):
+        """Run the hyperparameter optimization process"""
+        pass
+        
+    def get_best_params(self):
+        """Get the best parameters from the optimization"""
+        pass
+        
+    def visualize_results(self):
+        """Visualize the optimization results"""
+        pass
+        
+    def save_results(self, path):
+        """Save optimization results"""
+        pass
+```
+
+#### 3.3.3 Optimization Features
+- Flexible parameter specification with fixed/variable flags
+- Support for various parameter types: continuous, discrete, categorical
+- Parameter constraints and conditional parameters
+- Automatic pruning of unpromising trials
+- Visualization of parameter importance and optimization history
+- Integration with TPE, CMA-ES, and other Optuna samplers
+
+### 3.4 Online Learning
+
+#### 3.4.1 Overview
+The DPCT library supports online learning capabilities, allowing evolved individuals to be further trained using Keras while interacting with their environments.
+
+#### 3.4.2 Implementation Details
+- Extended `DHPCTIndividual.run()` method with online learning capabilities
+- Comparator values used as training outputs with target values of zero
+- Implementation of custom Keras callbacks for online learning
+- Configurable learning rate and training frequency
+
+#### 3.4.3 Online Learning Configuration
+```python
+online_learning_config = {
+    "enabled": True,
+    "learning_rate": 0.01,
+    "optimizer": "adam",
+    "batch_size": 32,
+    "train_every_n_steps": 10,
+    "error_weight_coefficients": {
+        "level_0": 1.0,
+        "level_1": 0.5,
+        "level_2": 0.1
+    }
+}
+```
+
 ## 4. Implementation Details
 
 ### 4.1 DHPCTIndividual Implementation Notes
 - Use Keras Functional API for model creation
 - Default activation function: linear
-- Default weight type: float
+- Default weight type: float - other types are boolean and ternary
 - Mate operation: Use DEAP crossover for structure, blend weights
-- Mutation operation: Structure mutation (10%) + Weight mutation (100%)
-- Evaluation: Run multiple times and average fitness
+- Mutation operation: Structure mutation + Weight mutation 
+- Evaluation: Run multiple times and choose average or maximum fitness
 
 ### 4.2 Example Configuration Dictionary
 ```python
