@@ -47,8 +47,7 @@ pip install nbdev tensorflow gym deap numpy matplotlib optuna
 
 #### 3.1.2 Class Structure
 ```python
-class DHPCTIndividual:
-    def __init__(self, env_name, gym_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
+class DHPCTIndividual:    def __init__(self, env_name, gym_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
         """
         Initialize a new individual with environment and hierarchy specifications.
         
@@ -69,8 +68,26 @@ class DHPCTIndividual:
     def compile(self):
         """Build the environment and Keras model"""
         pass
-          def config(self):
-        """Return a dictionary of the individual's properties"""
+        
+    def config(self):
+        """
+        Return a dictionary of the individual's properties
+        
+        Returns:
+        - dict: Complete configuration dictionary with environment, hierarchy, and weight data
+        """
+        pass
+        
+    def save_config(self, filepath):
+        """
+        Save the individual's configuration to a JSON file
+        
+        Parameters:
+        - filepath: Path where the configuration will be saved
+        
+        Returns:
+        - bool: True if save was successful, False otherwise
+        """
         pass
         
     def run(self, steps, train=False, early_termination=False):
@@ -280,6 +297,26 @@ config = {
         # Nested dictionary of weight values
     }
 }
+```
+
+### 4.3 Configuration Usage Example
+```python
+# Create an individual from a configuration file
+with open('best_individual.json', 'r') as f:
+    config_dict = json.load(f)
+individual = DHPCTIndividual.from_config(config_dict)
+
+# Run the individual
+fitness = individual.run(steps=1000)
+
+# Modify the individual
+individual.mutate(weight_prob=0.2)
+
+# Get the updated configuration
+new_config = individual.config()
+
+# Save the configuration for later use
+individual.save_config('modified_individual.json')
 ```
 
 ## 5. Verification and Testing
