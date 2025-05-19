@@ -47,12 +47,12 @@ pip install nbdev tensorflow gym deap numpy matplotlib optuna
 
 #### 3.1.2 Class Structure
 ```python
-class DHPCTIndividual:    def __init__(self, env_name, gym_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
+class DHPCTIndividual:    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
         """
         Initialize a new individual with environment and hierarchy specifications.
         
         Parameters:
-        - env_name: String identifier for the environment
+        - env_name: String identifier for the environment (e.g. 'CartPole-v1')
         - env_props: Additional environment properties
         - levels: Array of column sizes for each level in the hierarchy
         - activation_funcs: Dict mapping levels to activation functions
@@ -277,8 +277,7 @@ online_learning_config = {
 ```python
 config = {
     "env": {
-        "name": "CartPole-v1",
-        "gym_name": "CartPole-v1",
+        "env_name": "CartPole-v1",
         "properties": {"render_mode": "rgb_array"}
     },
     "hierarchy": {

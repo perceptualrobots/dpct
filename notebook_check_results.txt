@@ -1,0 +1,69 @@
+Found 11 notebooks
+
+Checking nbs\00_core.ipynb...
+  File size: 930 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 3 cells
+
+Checking nbs\01_funcs.ipynb...
+  File size: 2163 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 8 cells
+
+Checking nbs\02_individual.ipynb...
+  File size: 42378 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 17 cells
+
+Checking nbs\03_evolver.ipynb...
+  File size: 32950 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 12 cells
+
+Checking nbs\04_optimizer.ipynb...
+  File size: 27667 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 13 cells
+
+Checking nbs\05_usage_example.ipynb...
+  File size: 22634 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 51 cells
+
+Checking nbs\06_unit_tests.ipynb...
+  File size: 33971 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 22 cells
+
+Checking nbs\fixed_02_individual.ipynb...
+  File size: 15807 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 4 cells
+
+Checking nbs\fixed_individual.ipynb...
+  File size: 15807 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 4 cells
+
+Checking nbs\index.ipynb...
+  File size: 9685 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 12 cells
+
+Checking nbs\jupyter_02_individual.ipynb...
+  File size: 12896 bytes
+  First line: {
+  File appears to be in JSON format
+  Valid Jupyter notebook with 4 cells
+
+All notebooks checked
