@@ -25,7 +25,7 @@ This library merges concepts from Deep Learning and PCT to create adaptable cont
 
 ### 2.3 Required Dependencies
 ```
-pip install nbdev tensorflow gym deap numpy matplotlib optuna
+pip install nbdev tensorflow gymnasium deap numpy matplotlib optuna
 ```
 
 ### 2.4 Development Workflow
@@ -42,7 +42,7 @@ pip install nbdev tensorflow gym deap numpy matplotlib optuna
 
 #### 3.1.1 Overview
 `DHPCTIndividual` encapsulates:
-- An environment (e.g., OpenAI Gym) that provides sensory observations and receives actions
+- An environment (e.g., OpenAI Gym (Gymnasium)) that provides sensory observations and receives actions
 - A Keras model representing a PCT hierarchy with multiple control levels
 
 #### 3.1.2 Class Structure
@@ -338,7 +338,7 @@ individual.save_config('modified_individual.json')
 ## 6. Appendix: Implementation Timeline
 
 1. Core functionality: Basic DHPCTIndividual class
-2. Environment integration with OpenAI Gym
+2. Environment integration with OpenAI Gym (Gymnasium)
 3. Keras model creation and structure
 4. Evolution operators (mate, mutate)
 5. DHPCTEvolver implementation
