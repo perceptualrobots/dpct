@@ -14,84 +14,39 @@ import json
 class DHPCTDebugHelper:
     """
     Helper class for debugging DHPCTIndividual Keras models layer-by-layer.
+    Uses a debug model that outputs all intermediate layer outputs.
     """
-    def __init__(self, model):
+    def __init__(self, model, debug_model, layer_names):
         self.model = model
+        self.debug_model = debug_model
+        self.layer_names = layer_names
 
     @staticmethod
     def get_layer_name(layer):
-        """Return the name of the layer."""
         return layer.name
 
     @staticmethod
     def get_layer_weights(layer):
-        """Return the weights of the layer, or None if not applicable."""
         return layer.get_weights() if hasattr(layer, 'get_weights') else None
 
-    @staticmethod
-    def get_layer_output(layer, input_for_layer):
-        """Compute and return the output of the layer for the given input."""
-        try:
-            # don't compute outputs get from output tensor
-            print(f"  [Computing output for layer {layer.name}]")
-            print(f"  [Input for layer: {input_for_layer}]")
-            return layer(input_for_layer)
-        except Exception as e:
-            print(f"  [Error computing output: {e}]")
-            return None
-
-    @staticmethod
-    def get_input_layer_names(layer):
-        """Return a list of originating layer names for the inputs to this layer."""
-        if isinstance(layer.input, list):
-            names = []
-            for inp in layer.input:
-                if hasattr(inp, 'name'):
-                    names.append(inp.name.split('/')[0])
-            return names
-        else:
-            inp = layer.input
-            if hasattr(inp, 'name'):
-                return [inp.name.split('/')[0]]
-            return []
-
-    def debug_step(self, obs_input, ref_input):
+    def report_values(self, all_outputs):
         """
-        Print weights, input values, and output values for each layer for a single step.
+        Print output values for each layer for a single step.
         """
-        print("\nLayer-by-layer computation:")
-        prev_outputs = {'Observations': obs_input, 'Reference': ref_input}
-        for layer in self.model.layers:
-            # Skip InputLayer and skip Observations and Reference explicitly
-            if 'input' in layer.name.lower() or layer.name in ['Observations', 'Reference']:
-                continue
-            # Get input layer names
-            input_layer_names = self.get_input_layer_names(layer)
-            input_vals = [prev_outputs.get(n, None) for n in input_layer_names]
-            input_vals = [v for v in input_vals if v is not None]
-            if len(input_vals) == 1:
-                input_for_layer = input_vals[0]
-            else:
-                input_for_layer = input_vals
-            # Print input values
-            print(f"Layer {layer.name}:")
-            if isinstance(input_for_layer, list):
-                for idx, val in enumerate(input_for_layer):
-                    print(f"  Input {idx}: {val if isinstance(val, np.ndarray) else (val.numpy() if hasattr(val, 'numpy') else val)}")
-            else:
-                print(f"  Input: {input_for_layer if isinstance(input_for_layer, np.ndarray) else (input_for_layer.numpy() if hasattr(input_for_layer, 'numpy') else input_for_layer)}")
-            # Print weights
+        print("\nLayer-by-layer values:")
+        for name, out in zip(self.layer_names, all_outputs):
+            print(f"Layer {name}:")
+            layer = self.model.get_layer(name)
             weights = self.get_layer_weights(layer)
-            if weights:
+            if weights is not None and len(weights) > 0:
                 print(f"  Weights: {weights}")
-            # Compute output
-            out_val = self.get_layer_output(layer, input_for_layer)
-            if out_val is not None:
-                out_val_np = out_val if isinstance(out_val, np.ndarray) else (out_val.numpy() if hasattr(out_val, 'numpy') else out_val)
-                print(f"  Output: {out_val_np}")
-                prev_outputs[layer.name] = out_val
+            
+            if isinstance(out, np.ndarray):
+                print(f"  Output: {out}")
+            elif hasattr(out, 'numpy'):
+                print(f"  Output: {out.numpy()}")
             else:
-                print("  Output: [None]")
+                print(f"  Output: {out}")
 
 
 # %% ../nbs/02_individual.ipynb 6
@@ -99,7 +54,7 @@ class DHPCTIndividual:
     """
     Represents an individual with a hierarchical PCT control system and an environment.
     """
-    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None, input_references=None):
+    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None, input_references=None, debug=False):
         self.env_name = env_name
         self.env_props = env_props or {}
         self.levels = levels or []
@@ -109,6 +64,10 @@ class DHPCTIndividual:
         self.env = None
         self.model = None
         self.weights = {}
+        self.debug = debug
+        self._debug_helper = None
+        self._debug_model = None
+        self._debug_layer_names = None
 
     @classmethod
     def from_config(cls, config_dict):
@@ -128,6 +87,7 @@ class DHPCTIndividual:
     def compile(self):
         """
         Build the environment and Keras model according to the DPCT hierarchical PCT specification and naming conventions.
+        If debug is True, also build a debug model that outputs all intermediate layer outputs.
         """
         if not self.levels or not isinstance(self.levels, list) or not all(isinstance(l, int) and l > 0 for l in self.levels):
             raise ValueError("'levels' must be a non-empty list of positive integers. Got: {}".format(self.levels))
@@ -146,7 +106,7 @@ class DHPCTIndividual:
         if act_shape is not None and len(act_shape) > 0:
             act_space = act_shape[0]
         elif isinstance(action_space, gym.spaces.Discrete):
-            act_space = action_space.n
+            act_space = 1
         else:
             act_space = 1
         # Naming conventions
@@ -209,6 +169,16 @@ class DHPCTIndividual:
         errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]
         self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])
 
+        # If debug, create a debug model with all layer outputs
+        if self.debug:
+            # Exclude InputLayer and input placeholders
+            debug_layers = [layer for layer in self.model.layers if 'input' not in layer.name.lower() and layer.name not in ['Observations', 'Reference']]
+            debug_layer_outputs = [layer.output for layer in debug_layers]
+            debug_layer_names = [layer.name for layer in debug_layers]
+            self._debug_model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=debug_layer_outputs)
+            self._debug_layer_names = debug_layer_names
+            self._debug_helper = DHPCTDebugHelper(self.model, self._debug_model, self._debug_layer_names)
+
     def config(self):
         return {
             'env': {
@@ -236,13 +206,15 @@ class DHPCTIndividual:
         print(f"Observation: {obs_input}")
         print(f"Reference input: {ref_input}")
 
-        if not hasattr(self, '_debug_helper') or self._debug_helper is None:
-            self._debug_helper = DHPCTDebugHelper(self.model)
-        self._debug_helper.debug_step(obs_input, ref_input)
+        if self.debug and self._debug_helper is not None:
+            all_outputs = self._debug_model.predict([obs_input, ref_input])
+            if not isinstance(all_outputs, list):
+                all_outputs = [all_outputs]
+            self._debug_helper.report_values(all_outputs)
         print(f"Action chosen: {action}")
 
 
-    def run(self, steps, train=False, early_termination=False, debug=False):
+    def run(self, steps, train=False, early_termination=False):
         """
         Run the individual in its environment
         Parameters:
@@ -268,12 +240,13 @@ class DHPCTIndividual:
             ref_input = np.zeros((1, self.levels[-1])) if self.levels else np.zeros((1, 1))
             model_inputs = [obs_input, ref_input]
             model_outputs = self.model(model_inputs)
+            print(f"Model outputs: {model_outputs}")
             actions = model_outputs[0].numpy().squeeze()
             if hasattr(self.env.action_space, 'n'):
                 action = int(np.argmax(actions))
             else:
                 action = actions
-            if debug:
+            if self.debug:
                 self.debug_step(step, obs_input, ref_input, action)
             step_result = self.env.step(action)
             if len(step_result) == 5:
