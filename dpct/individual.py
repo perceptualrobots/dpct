@@ -19,12 +19,13 @@ class DHPCTIndividual:
     """
     Represents an individual with a hierarchical PCT control system and an environment.
     """
-    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
+    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None, input_references=None):
         self.env_name = env_name
         self.env_props = env_props or {}
         self.levels = levels or []
         self.activation_funcs = activation_funcs or {}
         self.weight_types = weight_types or {}
+        self.input_references = input_references
         self.env = None
         self.model = None
         self.weights = {}
@@ -46,7 +47,7 @@ class DHPCTIndividual:
 
     def compile(self):
         """
-        Build the environment and Keras model according to the DPCT hierarchical PCT specification.
+        Build the environment and Keras model according to the DPCT hierarchical PCT specification and naming conventions.
         """
         if not self.levels or not isinstance(self.levels, list) or not all(isinstance(l, int) and l > 0 for l in self.levels):
             raise ValueError("'levels' must be a non-empty list of positive integers. Got: {}".format(self.levels))
@@ -68,37 +69,65 @@ class DHPCTIndividual:
             act_space = action_space.n
         else:
             act_space = 1
-        obs_input = tf.keras.Input(shape=(obs_space,), name='observation')
-        ref_input = tf.keras.Input(shape=(self.levels[-1],), name='reference') if self.levels else tf.keras.Input(shape=(1,), name='reference')
+        # Naming conventions
+        def lname(prefix, level):
+            return f"{prefix}L{level:02d}"
+        # Input layers
+        obs_input = tf.keras.Input(shape=(obs_space,), name='Observations')
+        ref_shape = (len(self.input_references),) if self.input_references is not None else (self.levels[-1],)
+        ref_input = tf.keras.Input(shape=ref_shape, name='Reference')
+        # Build hierarchy
         perceptions = []
         references = []
         comparators = []
         outputs = []
-        x = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=None, name='level0_perception')(obs_input)
-        perceptions.append(x)
-        ref0 = tf.keras.layers.Lambda(lambda t: tf.zeros_like(t), name='level0_reference')(x)
-        references.append(ref0)
-        comp0 = tf.keras.layers.Subtract(name='level0_comparator')([ref0, x])
-        comparators.append(comp0)
-        out0_weights = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=None, name='level0_output_weights')(comp0)
-        out0 = tf.keras.layers.Multiply(name='level0_output')([comp0, out0_weights])
-        outputs.append(out0)
-        for i in range(1, len(self.levels)):
-            p = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=None, name=f'level{i}_perception')(perceptions[i-1])
-            perceptions.append(p)
-            if i == len(self.levels)-1:
-                ref = tf.keras.layers.Lambda(lambda inputs: inputs[0] - tf.zeros_like(inputs[1]), name=f'level{i}_reference')([ref_input, p])
+        act0 = self.activation_funcs.get(0, 'linear')
+        p0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=act0, name=lname('P', 0))(obs_input)
+        perceptions.append(p0)
+        # Level 0 reference
+        if len(self.levels) == 1:
+            # For single level, use reference input as reference
+            r0 = tf.keras.layers.Lambda(lambda x: x, name=lname('R', 0))(ref_input)
+        else:
+            # For multi-level, reference is weighted sum of output layer of level 1
+            # We'll create level 1 output first, then use it for r0
+            act1 = self.activation_funcs.get(1, 'linear')
+            p1 = tf.keras.layers.Dense(self.levels[1], use_bias=False, activation=act1, name=lname('P', 1))(p0)
+            perceptions.append(p1)
+            # Reference for level 1 (top if only 2 levels, else will be overwritten in loop)
+            if len(self.levels) == 2:
+                r1 = tf.keras.layers.Lambda(lambda x: x, name=lname('R', 1))(ref_input)
             else:
-                ref = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=None, name=f'level{i}_reference')(outputs[i-1])
-            references.append(ref)
-            comp = tf.keras.layers.Subtract(name=f'level{i}_comparator')([ref, p]) # type: ignore
-            comparators.append(comp)
-            out_weights = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=None, name=f'level{i}_output_weights')(comp)
-            out = tf.keras.layers.Multiply(name=f'level{i}_output')([comp, out_weights])
-            outputs.append(out)
-        actions = tf.keras.layers.Dense(act_space, activation='linear', name='actions')(outputs[0])
-        model_outputs = [actions] + comparators
-        self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=model_outputs)
+                r1 = tf.keras.layers.Dense(self.levels[1], use_bias=False, activation='linear', name=lname('R', 1))(p0)
+            references.append(r1)
+            c1 = tf.keras.layers.Subtract(name=lname('C', 1))([r1, p1])
+            comparators.append(c1)
+            o1 = tf.keras.layers.Multiply(name=lname('O', 1))([c1, tf.keras.layers.Dense(self.levels[1], use_bias=False, activation='linear')(c1)])
+            outputs.append(o1)
+            # Now r0 is weighted sum of o1
+            r0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation='linear', name=lname('R', 0))(o1)
+        references.insert(0, r0)
+        c0 = tf.keras.layers.Subtract(name=lname('C', 0))([r0, p0])
+        comparators.insert(0, c0)
+        o0 = tf.keras.layers.Multiply(name=lname('O', 0))([c0, tf.keras.layers.Dense(self.levels[0], use_bias=False, activation='linear')(c0)])
+        outputs.insert(0, o0)
+        # Build higher levels if more than 2
+        for i in range(2, len(self.levels)):
+            act = self.activation_funcs.get(i, 'linear')
+            p = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=act, name=lname('P', i))(perceptions[i-1])
+            perceptions.append(p)
+            if i == len(self.levels) - 1:
+                r = tf.keras.layers.Lambda(lambda x: x, name=lname('R', i))(ref_input)
+            else:
+                r = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear', name=lname('R', i))(outputs[i-1])
+            references.append(r)
+            c = tf.keras.layers.Subtract(name=lname('C', i))([r, p])
+            comparators.append(c)
+            o = tf.keras.layers.Multiply(name=lname('O', i))([c, tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(c)])
+            outputs.append(o)
+        actions = tf.keras.layers.Dense(act_space, use_bias=False, activation='linear', name='Actions')(outputs[0])
+        errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]
+        self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])
 
     def config(self):
         return {
@@ -122,13 +151,14 @@ class DHPCTIndividual:
         except Exception:
             return False
 
-    def run(self, steps, train=False, early_termination=False):
+    def run(self, steps, train=False, early_termination=False, debug=False):
         """
         Run the individual in its environment
         Parameters:
         - steps: Number of timesteps to run
         - train: Whether to enable online learning during execution
         - early_termination: Whether to terminate early based on environment signals
+        - debug: If True, print weights, input values, and output values for each layer at each step
         """
         if not self.levels or len(self.levels) == 0:
             raise ValueError("Hierarchy levels are not defined. Please provide a non-empty levels list.")
@@ -142,15 +172,63 @@ class DHPCTIndividual:
         if isinstance(obs, tuple):
             obs = obs[0]
         total_reward = 0
-        for _ in range(steps):
+        for step in range(steps):
             obs_input = np.expand_dims(obs, axis=0)
             ref_input = np.zeros((1, self.levels[-1])) if self.levels else np.zeros((1, 1))
-            model_outputs = self.model([obs_input, ref_input])
+            model_inputs = [obs_input, ref_input]
+            model_outputs = self.model(model_inputs)
             actions = model_outputs[0].numpy().squeeze()
             if hasattr(self.env.action_space, 'n'):
                 action = int(np.argmax(actions))
             else:
                 action = actions
+            if debug:
+                print(f"\n--- Step {step+1} ---")
+                print(f"Observation: {obs}")
+                print(f"Reference input: {ref_input}")
+                print("\nLayer-by-layer computation:")
+                prev_outputs = {'Observations': obs_input, 'Reference': ref_input}
+                for layer in self.model.layers:
+                    # Skip InputLayer
+                    if 'input' in layer.name.lower():
+                        continue
+                    # Determine input(s) to this layer
+                    if isinstance(layer.input, list):
+                        input_vals = [prev_outputs.get(inp.name.split('/')[0], None) for inp in layer.input]
+                        # Remove None if not found (should not happen in a well-formed model)
+                        input_vals = [v for v in input_vals if v is not None]
+                        if len(input_vals) == 1:
+                            input_for_layer = input_vals[0]
+                        else:
+                            input_for_layer = input_vals
+                    else:
+                        input_name = layer.input.name.split('/')[0]
+                        input_for_layer = prev_outputs.get(input_name, None)
+                    # Print input values
+                    if isinstance(input_for_layer, list):
+                        print(f"Layer {layer.name}:")
+                        for idx, val in enumerate(input_for_layer):
+                            print(f"  Input {idx}: {val if isinstance(val, np.ndarray) else (val.numpy() if hasattr(val, 'numpy') else val)}")
+                    else:
+                        print(f"Layer {layer.name}:")
+                        print(f"  Input: {input_for_layer if isinstance(input_for_layer, np.ndarray) else (input_for_layer.numpy() if hasattr(input_for_layer, 'numpy') else input_for_layer)}")
+                    # Print weights
+                    weights = layer.get_weights() if hasattr(layer, 'get_weights') else None
+                    if weights:
+                        print(f"  Weights: {weights}")
+                    # Compute output
+                    try:
+                        out_val = layer(input_for_layer)
+                    except Exception as e:
+                        print(f"  [Error computing output: {e}]")
+                        out_val = None
+                    if out_val is not None:
+                        out_val_np = out_val if isinstance(out_val, np.ndarray) else (out_val.numpy() if hasattr(out_val, 'numpy') else out_val)
+                        print(f"  Output: {out_val_np}")
+                        prev_outputs[layer.name] = out_val
+                    else:
+                        print("  Output: [None]")
+                print(f"Action chosen: {action}")
             step_result = self.env.step(action)
             if len(step_result) == 5:
                 obs, reward, terminated, truncated, _ = step_result
@@ -161,7 +239,6 @@ class DHPCTIndividual:
             total_reward += reward
             if early_termination and (terminated or truncated):
                 break
-
         self.env.close()
         return total_reward
 
