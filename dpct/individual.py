@@ -91,7 +91,7 @@ class DHPCTIndividual:
             else:
                 ref = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=None, name=f'level{i}_reference')(outputs[i-1])
             references.append(ref)
-            comp = tf.keras.layers.Subtract(name=f'level{i}_comparator')([ref, p])
+            comp = tf.keras.layers.Subtract(name=f'level{i}_comparator')([ref, p]) # type: ignore
             comparators.append(comp)
             out_weights = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=None, name=f'level{i}_output_weights')(comp)
             out = tf.keras.layers.Multiply(name=f'level{i}_output')([comp, out_weights])
@@ -161,6 +161,8 @@ class DHPCTIndividual:
             total_reward += reward
             if early_termination and (terminated or truncated):
                 break
+
+        self.env.close()
         return total_reward
 
     def mate(self, other):

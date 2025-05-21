@@ -47,7 +47,7 @@ pip install nbdev tensorflow gymnasium deap numpy matplotlib optuna
 
 #### 3.1.2 Class Structure
 ```python
-class DHPCTIndividual:    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None):
+class DHPCTIndividual:    def __init__(self, env_name, env_props=None, levels=None, activation_funcs=None, weight_types=None, input_references=None):
         """
         Initialize a new individual with environment and hierarchy specifications.
         
@@ -57,6 +57,7 @@ class DHPCTIndividual:    def __init__(self, env_name, env_props=None, levels=No
         - levels: Array of column sizes for each level in the hierarchy
         - activation_funcs: Dict mapping levels to activation functions
         - weight_types: Dict specifying weight variable types
+        - input_references: a list of values for the fixed reference input layer
         """
         pass
         
@@ -272,6 +273,30 @@ online_learning_config = {
 - Mate operation: Use DEAP crossover for structure, blend weights
 - Mutation operation: Structure mutation + Weight mutation 
 - Evaluation: Run multiple times and choose average or maximum fitness
+
+#### 4.1.1 Keras Model structure
+
+- The default activations are linear unless specified in self.activation_funcs
+- The obs_input input layer takes the shape of obs_space
+- The ref_input input layer takes the shape of the input_references or the shape of the top level
+- For each level the structure is as follows:
+-- A perception layer is the weighted sum of perception layer below, except for level 0 where the perception layer is the weighted sum of the observations input layer
+-- A reference layer is the weighted sum of output layer from above, except for the top layer where the reference layer is reference input layer
+-- A comparator layer = reference layer - perception layer
+-- An output layer is the element-wise multiplication of weights and comparator layer
+- The actions layer is the weighted sum of the level 0 output layer
+
+#### 4.1.2 Model Naming Conventions
+
+The naming of the model layers should follow this convention:
+- The letter P, R, C or O if the layer is a perception, reference, comparator or output
+- The letter L for level
+- Two digits for the level, left padded with zero
+- The InputLayer should just be called Observations
+- The action outputs should just be called Actions
+- The output array of all comparator values should be called Errors
+
+
 
 ### 4.2 Example Configuration Dictionary
 ```python
