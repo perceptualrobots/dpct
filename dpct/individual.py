@@ -116,62 +116,37 @@ class DHPCTIndividual:
         obs_input = tf.keras.Input(shape=(obs_space,), name='Observations')
         ref_shape = (len(self.input_references),) if self.input_references is not None else (self.levels[-1],)
         ref_input = tf.keras.Input(shape=ref_shape, name='Reference')
-        # Build hierarchy
+        # --- First: Perception layers ---
         perceptions = []
-        references = []
-        comparators = []
-        outputs = []
         act0 = self.activation_funcs.get(0, 'linear')
         p0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=act0, name=lname('P', 0))(obs_input)
         perceptions.append(p0)
-        # Level 0 reference
-        if len(self.levels) == 1:
-            # For single level, use reference input as reference
-            r0 = tf.keras.layers.Lambda(lambda x: x, name=lname('R', 0))(ref_input)
-        else:
-            # For multi-level, reference is weighted sum of output layer of level 1
-            # We'll create level 1 output first, then use it for r0
-            act1 = self.activation_funcs.get(1, 'linear')
-            p1 = tf.keras.layers.Dense(self.levels[1], use_bias=False, activation=act1, name=lname('P', 1))(p0)
-            perceptions.append(p1)
-            # Reference for level 1 (top if only 2 levels, else will be overwritten in loop)
-            if len(self.levels) == 2:
-                r1 = tf.keras.layers.Lambda(lambda x: x, name=lname('R', 1))(ref_input)
-            else:
-                r1 = tf.keras.layers.Dense(self.levels[1], use_bias=False, activation='linear', name=lname('R', 1))(p0)
-            references.append(r1)
-            c1 = tf.keras.layers.Subtract(name=lname('C', 1))([r1, p1])
-            comparators.append(c1)
-            o1 = tf.keras.layers.Multiply(name=lname('O', 1))([c1, tf.keras.layers.Dense(self.levels[1], use_bias=False, activation='linear')(c1)])
-            outputs.append(o1)
-            # Now r0 is weighted sum of o1
-            r0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation='linear', name=lname('R', 0))(o1)
-        references.insert(0, r0)
-        c0 = tf.keras.layers.Subtract(name=lname('C', 0))([r0, p0])
-        comparators.insert(0, c0)
-        o0 = tf.keras.layers.Multiply(name=lname('O', 0))([c0, tf.keras.layers.Dense(self.levels[0], use_bias=False, activation='linear')(c0)])
-        outputs.insert(0, o0)
-        # Build higher levels if more than 2
-        for i in range(2, len(self.levels)):
+        for i in range(1, len(self.levels)):
             act = self.activation_funcs.get(i, 'linear')
             p = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=act, name=lname('P', i))(perceptions[i-1])
             perceptions.append(p)
-            if i == len(self.levels) - 1:
-                r = tf.keras.layers.Lambda(lambda x: x, name=lname('R', i))(ref_input)
-            else:
-                r = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear', name=lname('R', i))(outputs[i-1])
-            references.append(r)
-            c = tf.keras.layers.Subtract(name=lname('C', i))([r, p])
-            comparators.append(c)
-            o = tf.keras.layers.Multiply(name=lname('O', i))([c, tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(c)])
-            outputs.append(o)
+        # --- Second: Reference, Comparator, Output layers ---
+        references = [None] * len(self.levels)
+        comparators = [None] * len(self.levels)
+        outputs = [None] * len(self.levels)
+        # Top level reference from ref_input
+        top = len(self.levels) - 1
+        references[top] = tf.keras.layers.Lambda(lambda x: x, name=lname('R', top))(ref_input)
+        # Loop from top level downwards
+        for i in reversed(range(len(self.levels))):
+            if i != top:
+                # Reference: weighted sum of output from above
+                references[i] = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear', name=lname('R', i))(outputs[i+1])
+            # Comparator: reference - perception
+            comparators[i] = tf.keras.layers.Subtract(name=lname('C', i))([references[i], perceptions[i]])
+            # Output: element-wise multiplication of weights and comparator
+            outputs[i] = tf.keras.layers.Multiply(name=lname('O', i))([comparators[i], tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(comparators[i])])
+        # --- Third: Actions and Errors layers ---
         actions = tf.keras.layers.Dense(act_space, use_bias=False, activation='linear', name='Actions')(outputs[0])
         errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]
         self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])
-
         # If debug, create a debug model with all layer outputs
         if self.debug:
-            # Exclude InputLayer and input placeholders
             debug_layers = [layer for layer in self.model.layers if 'input' not in layer.name.lower() and layer.name not in ['Observations', 'Reference']]
             debug_layer_outputs = [layer.output for layer in debug_layers]
             debug_layer_names = [layer.name for layer in debug_layers]
