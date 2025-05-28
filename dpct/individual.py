@@ -5,7 +5,7 @@ __all__ = ['DHPCTDebugHelper', 'DHPCTIndividual']
 
 # %% ../nbs/02_individual.ipynb 4
 import gymnasium as gym
-import tensorflow as tf
+import tensorflow as tf  # type: ignore
 import numpy as np
 import json
 
@@ -113,17 +113,20 @@ class DHPCTIndividual:
         def lname(prefix, level):
             return f"{prefix}L{level:02d}"
         # Input layers
-        obs_input = tf.keras.Input(shape=(obs_space,), name='Observations')
-        ref_shape = (len(self.input_references),) if self.input_references is not None else (self.levels[-1],)
-        ref_input = tf.keras.Input(shape=ref_shape, name='Reference')
+        obs_input = tf.keras.Input(shape=(obs_space,), name='Observations')  # type: ignore
+        if self.input_references is not None and hasattr(self.input_references, '__len__'):
+            ref_shape = (len(self.input_references),)
+        else:
+            ref_shape = (self.levels[-1],)
+        ref_input = tf.keras.Input(shape=ref_shape, name='Reference')  # type: ignore
         # --- First: Perception layers ---
         perceptions = []
         act0 = self.activation_funcs.get(0, 'linear')
-        p0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=act0, name=lname('P', 0))(obs_input)
+        p0 = tf.keras.layers.Dense(self.levels[0], use_bias=False, activation=act0, name=lname('P', 0))(obs_input)  # type: ignore
         perceptions.append(p0)
         for i in range(1, len(self.levels)):
             act = self.activation_funcs.get(i, 'linear')
-            p = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=act, name=lname('P', i))(perceptions[i-1])
+            p = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation=act, name=lname('P', i))(perceptions[i-1])  # type: ignore
             perceptions.append(p)
         # --- Second: Reference, Comparator, Output layers ---
         references = [None] * len(self.levels)
@@ -131,26 +134,26 @@ class DHPCTIndividual:
         outputs = [None] * len(self.levels)
         # Top level reference from ref_input
         top = len(self.levels) - 1
-        references[top] = tf.keras.layers.Lambda(lambda x: x, name=lname('R', top))(ref_input)
+        references[top] = tf.keras.layers.Lambda(lambda x: x, name=lname('R', top))(ref_input)  # type: ignore
         # Loop from top level downwards
         for i in reversed(range(len(self.levels))):
             if i != top:
                 # Reference: weighted sum of output from above
-                references[i] = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear', name=lname('R', i))(outputs[i+1])
+                references[i] = tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear', name=lname('R', i))(outputs[i+1])  # type: ignore
             # Comparator: reference - perception
-            comparators[i] = tf.keras.layers.Subtract(name=lname('C', i))([references[i], perceptions[i]])
+            comparators[i] = tf.keras.layers.Subtract(name=lname('C', i))([references[i], perceptions[i]])  # type: ignore
             # Output: element-wise multiplication of weights and comparator
-            outputs[i] = tf.keras.layers.Multiply(name=lname('O', i))([comparators[i], tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(comparators[i])])
+            outputs[i] = tf.keras.layers.Multiply(name=lname('O', i))([comparators[i], tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(comparators[i])])  # type: ignore
         # --- Third: Actions and Errors layers ---
-        actions = tf.keras.layers.Dense(act_space, use_bias=False, activation='linear', name='Actions')(outputs[0])
-        errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]
-        self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])
+        actions = tf.keras.layers.Dense(act_space, use_bias=False, activation='linear', name='Actions')(outputs[0])  # type: ignore
+        errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]  # type: ignore
+        self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])  # type: ignore
         # If debug, create a debug model with all layer outputs
         if self.debug:
             debug_layers = [layer for layer in self.model.layers if 'input' not in layer.name.lower() and layer.name not in ['Observations', 'Reference']]
             debug_layer_outputs = [layer.output for layer in debug_layers]
             debug_layer_names = [layer.name for layer in debug_layers]
-            self._debug_model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=debug_layer_outputs)
+            self._debug_model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=debug_layer_outputs)  # type: ignore
             self._debug_layer_names = debug_layer_names
             self._debug_helper = DHPCTDebugHelper(self.model, self._debug_model, self._debug_layer_names)
 
@@ -181,7 +184,7 @@ class DHPCTIndividual:
         print(f"Observation: {obs_input}")
         print(f"Reference input: {ref_input}")
 
-        if self.debug and self._debug_helper is not None:
+        if self.debug and self._debug_model is not None and self._debug_helper is not None:
             all_outputs = self._debug_model.predict([obs_input, ref_input])
             if not isinstance(all_outputs, list):
                 all_outputs = [all_outputs]
@@ -224,13 +227,18 @@ class DHPCTIndividual:
             if self.debug:
                 self.debug_step(step, obs_input, ref_input, action)
             step_result = self.env.step(action)
-            if len(step_result) == 5:
-                obs, reward, terminated, truncated, _ = step_result
+            if isinstance(step_result, (list, tuple)):
+                if len(step_result) == 5:
+                    obs, reward, terminated, truncated, _ = step_result
+                elif len(step_result) == 4:
+                    obs, reward, done, _ = step_result # type: ignore
+                    terminated = done
+                    truncated = False
+                else:
+                    raise ValueError(f"Unexpected number of elements returned from env.step: {len(step_result)}")
             else:
-                obs, reward, done, _ = step_result
-                terminated = done
-                truncated = False
-            total_reward += reward
+                raise TypeError(f"env.step(action) did not return an iterable, got: {type(step_result)}")
+            total_reward += reward # type: ignore
             if early_termination and (terminated or truncated):
                 break
         self.env.close()
