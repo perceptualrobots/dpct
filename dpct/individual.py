@@ -114,7 +114,10 @@ class DHPCTIndividual:
             return f"{prefix}L{level:02d}"
         # Input layers
         obs_input = tf.keras.Input(shape=(obs_space,), name='Observations')  # type: ignore
-        ref_shape = (len(self.input_references),) if self.input_references is not None else (self.levels[-1],)
+        if self.input_references is not None and hasattr(self.input_references, '__len__'):
+            ref_shape = (len(self.input_references),)
+        else:
+            ref_shape = (self.levels[-1],)
         ref_input = tf.keras.Input(shape=ref_shape, name='Reference')  # type: ignore
         # --- First: Perception layers ---
         perceptions = []
@@ -181,8 +184,8 @@ class DHPCTIndividual:
         print(f"Observation: {obs_input}")
         print(f"Reference input: {ref_input}")
 
-        if self.debug and self._debug_helper is not None:
-            all_outputs = self._debug_model.predict([obs_input, ref_input]) # type: ignore
+        if self.debug and self._debug_model is not None and self._debug_helper is not None:
+            all_outputs = self._debug_model.predict([obs_input, ref_input])
             if not isinstance(all_outputs, list):
                 all_outputs = [all_outputs]
             self._debug_helper.report_values(all_outputs)
@@ -228,14 +231,14 @@ class DHPCTIndividual:
                 if len(step_result) == 5:
                     obs, reward, terminated, truncated, _ = step_result
                 elif len(step_result) == 4:
-                    obs, reward, done, _ = step_result
+                    obs, reward, done, _ = step_result # type: ignore
                     terminated = done
                     truncated = False
                 else:
                     raise ValueError(f"Unexpected number of elements returned from env.step: {len(step_result)}")
             else:
                 raise TypeError(f"env.step(action) did not return an iterable, got: {type(step_result)}")
-            total_reward += reward
+            total_reward += reward # type: ignore
             if early_termination and (terminated or truncated):
                 break
         self.env.close()
