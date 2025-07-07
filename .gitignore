@@ -141,3 +141,4 @@ checklink/cookies.txt
 
 old/*
 nbs/*.png
+*.whl
