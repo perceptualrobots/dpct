@@ -146,7 +146,7 @@ class DHPCTIndividual:
             outputs[i] = tf.keras.layers.Multiply(name=lname('O', i))([comparators[i], tf.keras.layers.Dense(self.levels[i], use_bias=False, activation='linear')(comparators[i])])  # type: ignore
         # --- Third: Actions and Errors layers ---
         actions = tf.keras.layers.Dense(act_space, use_bias=False, activation='linear', name='Actions')(outputs[0])  # type: ignore
-        errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else comparators[0]  # type: ignore
+        errors = tf.keras.layers.Concatenate(name='Errors')(comparators) if len(comparators) > 1 else tf.keras.layers.Lambda(lambda x: x, name='Errors')(comparators[0])  # type: ignore
         self.model = tf.keras.Model(inputs=[obs_input, ref_input], outputs=[actions, errors])  # type: ignore
         # If debug, create a debug model with all layer outputs
         if self.debug:
