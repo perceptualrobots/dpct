@@ -62,15 +62,17 @@ Tests MUST be written before implementation. The Red-Green-Refactor cycle is str
 
 ### III. Configuration-Driven Architecture
 
-All hierarchical control systems MUST be fully representable as JSON configurations that can be saved, loaded, and version-controlled independently of code.
+All hierarchical control systems MUST be fully representable as configurations that can be saved, loaded, serialized, and version-controlled independently of code.
 
-**Rationale**: Configuration-driven design enables reproducibility, experimentation tracking, sharing of evolved individuals, and deployment flexibility.
+**Rationale**: Configuration-driven design enables reproducibility, experimentation tracking, sharing of evolved individuals, deployment flexibility, and interoperability with legacy systems.
 
 **Requirements**:
 - Every `DHPCTIndividual` MUST implement:
   - `config()` method returning complete configuration dictionary
   - `save_config(filepath)` method persisting to JSON
   - `from_config(config_dict)` class method for instantiation
+  - `to_legacy_config()` and `from_legacy_config()` methods for legacy format conversion
+- Configuration dictionaries MUST be pickleable for serialization beyond JSON
 - Configuration MUST include:
   - Environment specification (`env_name`, `properties`)
   - Hierarchy structure (`levels`, `activation_funcs`, `weight_types`)
@@ -87,7 +89,7 @@ PCT (Perceptual Control Theory) hierarchy structure MUST be preserved with clear
 
 **Requirements**:
 - Each control unit MUST have: reference function, perception function, comparator (reference - perception), output function
-- Lowest level perceptions MUST connect to environment observations
+- Lowest level perceptions MUST connect to environment observations, unless another level is explicitly specified for connection to observations
 - Highest level references MUST connect to external reference inputs
 - Comparator values (errors) across all levels MUST be exposed as model outputs
 - Actions from lowest level MUST be applied to environment
@@ -102,15 +104,28 @@ PCT (Perceptual Control Theory) hierarchy structure MUST be preserved with clear
 
 ### V. Evolution & Optimization Transparency
 
-Evolutionary and optimization processes MUST provide comprehensive visibility through logging, statistics, and configuration tracking.
+Evolutionary and optimization processes MUST provide comprehensive visibility through logging, statistics, visualization, and configuration tracking.
 
-**Rationale**: Transparency enables debugging, reproducibility, hyperparameter tuning, and understanding of evolutionary dynamics.
+**Rationale**: Transparency enables debugging, reproducibility, hyperparameter tuning, understanding of evolutionary dynamics, and publication-quality analysis.
 
 **Requirements**:
 - Generation statistics MUST include: min/mean/max fitness, mutation percentages, elapsed time
 - Option to save best individual configuration each generation
 - Option to save all individual configurations for full population tracking
-- Early termination criteria MUST be configurable: fitness target, stagnation detection
+- Early termination based on stagnation detection (unchanged generations)
+- Optional comet_ml integration for experiment logging and tracking
+- Evolution MUST support parallelization of fitness evaluations
+- Evolution MUST support:
+  - Random structure initialization (random level counts and units per level within limits)
+  - Initialization with existing or pre-trained individuals
+  - Marking specific weights, nodes, or levels as FIXED to prevent modification
+- Execution history MUST be optionally recordable:
+  - All observations, layer values, and actions over time
+  - Graphical visualization of execution history
+- Network visualization MUST support three views:
+  - Layer view: all layers, nodes, and connections
+  - PCT unit view: control units as single nodes
+  - Weighted view: connections showing weight values
 - Optuna optimization MUST support:
   - Fixed vs. variable parameter specification
   - Parameter importance visualization
@@ -122,14 +137,23 @@ Evolutionary and optimization processes MUST provide comprehensive visibility th
 
 ### Mandatory Dependencies
 
-Projects MUST include these dependencies:
-- `nbdev` - Literate programming framework
+Projects MUST include:
+- `nbdev` - Literate programming framework (MANDATORY)
+
+### Suggested Dependencies
+
+Projects SHOULD include these dependencies for full functionality:
 - `tensorflow` - Keras model implementation
 - `gymnasium` - Environment interface (successor to OpenAI Gym)
 - `deap` - Evolutionary algorithms
 - `numpy` - Numerical operations
 - `matplotlib` - Visualization
 - `optuna` - Hyperparameter optimization
+- `networkx` - Network visualization
+- `comet_ml` - Optional experiment logging
+- `pickle` - Configuration serialization (Python standard library)
+
+**Note**: The library MUST support environments from Gymnasium or any environments following the same interface pattern.
 
 ### Development Workflow
 
@@ -169,8 +193,9 @@ The following workflow MUST be followed:
 
 ### Performance Validation
 
-- Individuals MUST successfully run standard environments (CartPole, Lunar Lander)
+- Individuals MUST successfully run standard environments (CartPole, LunarLanderContinuous)
 - Evaluation MUST support multiple runs with configurable aggregation (average/maximum)
+- Early termination refers to the environment returning Done=True (not a fitness target)
 - Online learning MUST be optional and configurable
 
 ## Governance

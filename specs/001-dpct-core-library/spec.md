@@ -114,7 +114,7 @@ A researcher wants an evolved individual to continue learning while interacting 
 ### Edge Cases
 
 - What happens when an environment terminates early (e.g., CartPole falls)?
-  - If early_termination=True, run() stops; otherwise continues resetting environment
+  - If early_termination=True, run() stops when environment returns Done=True; otherwise continues resetting environment
 - What happens when loading a configuration for an environment that's not installed?
   - from_config() should fail gracefully with clear error message indicating missing environment
 - What happens when mate() is called with incompatible hierarchies (different level counts)?
@@ -141,15 +141,19 @@ A researcher wants an evolved individual to continue learning while interacting 
 - **FR-003**: DHPCTIndividual MUST compile() to create a Keras Functional API model representing the PCT hierarchy
 - **FR-004**: DHPCTIndividual MUST support run(steps, train, early_termination) to execute in environment and return fitness
 - **FR-005**: DHPCTIndividual MUST support config() to return complete configuration dictionary including env, hierarchy, and weights
+- **FR-005a**: Configuration dictionaries MUST be pickleable for serialization beyond JSON
 - **FR-006**: DHPCTIndividual MUST support save_config(filepath) to persist configuration as JSON
 - **FR-007**: DHPCTIndividual MUST support mate(other) to create two offspring via crossover
 - **FR-008**: DHPCTIndividual MUST support mutate(struct_prob, weight_prob) to modify structure and/or weights
 - **FR-009**: DHPCTIndividual MUST support evaluate(nevals) to run multiple trials and return fitness score
+- **FR-009a**: DHPCTIndividual MUST support converting to and from legacy configuration formats via to_legacy_config() and from_legacy_config() methods
+- **FR-009b**: DHPCTIndividual.run() MUST support optional history recording of all observations, layer values, and actions
+- **FR-009c**: System MUST provide visualization functions for execution history showing observations, layer activations, and actions over time
 
 #### Hierarchy Structure Requirements
 
 - **FR-010**: Each level MUST have perception, reference, comparator, and output layers following PCT principles
-- **FR-011**: Level 0 perception layer MUST receive inputs from environment observations
+- **FR-011**: Lowest level perception layer MUST receive inputs from environment observations, unless another level is explicitly specified for connection to observations
 - **FR-012**: Higher level perception layers MUST receive inputs from all perception values of the level below
 - **FR-013**: Highest level reference layer MUST receive inputs from external reference input layer
 - **FR-014**: Lower level reference layers MUST receive inputs from all output values of the level above
@@ -158,6 +162,9 @@ A researcher wants an evolved individual to continue learning while interacting 
 - **FR-017**: Actions MUST be computed from Level 0 output layer
 - **FR-018**: Errors output MUST collect all comparator values across all levels
 - **FR-019**: Model layers MUST follow naming convention: PL## (perception), RL## (reference), CL## (comparator), OL## (output), Observations, Actions, Errors
+- **FR-019a**: System MUST provide visualization function to display network diagram of hierarchy showing all layers, nodes, and connections
+- **FR-019b**: System MUST provide visualization function to display PCT control units as single nodes (combining reference, perception, comparator, output)
+- **FR-019c**: System MUST provide visualization function to display hierarchy network with weight values shown on connections
 
 #### Weight and Activation Requirements
 
@@ -173,12 +180,16 @@ A researcher wants an evolved individual to continue learning while interacting 
 - **FR-026**: DHPCTEvolver MUST support setup_evolution(template_individual, fitness_function, minimize) to configure DEAP toolbox
 - **FR-027**: DHPCTEvolver MUST support run_evolution(verbose) to execute evolutionary algorithm
 - **FR-028**: DHPCTEvolver MUST track generation statistics: min/mean/max fitness, mutation percentages, elapsed time
-- **FR-029**: DHPCTEvolver MUST support early termination based on evolve_termination (fitness target)
-- **FR-030**: DHPCTEvolver MUST support early termination based on evolve_static_termination (unchanged generations)
+- **FR-029**: DHPCTEvolver MUST support early termination based on evolve_static_termination (unchanged generations)
+- **FR-030**: DHPCTEvolver MUST support parallelization of fitness evaluations during evolution
 - **FR-031**: DHPCTEvolver MUST support save_arch_best option to save best individual configuration each generation
 - **FR-032**: DHPCTEvolver MUST support save_arch_all option to save all individual configurations each generation
 - **FR-033**: DHPCTEvolver MUST support run_best option to evaluate and display best individual each generation
 - **FR-034**: DHPCTEvolver MUST support save_results(path) to persist evolution statistics and configurations
+- **FR-034a**: DHPCTEvolver MUST support optional logging to comet_ml experiments for tracking evolution progress
+- **FR-034b**: DHPCTEvolver MUST support initialization with random hierarchy structures (random level counts and units per level within specified limits)
+- **FR-034c**: DHPCTEvolver MUST support initialization with existing or pre-trained individuals in addition to random initialization
+- **FR-034d**: DHPCTEvolver MUST support marking specific weights, nodes, or levels as FIXED to prevent modification during evolution
 
 #### Optimization Requirements
 
@@ -200,7 +211,7 @@ A researcher wants an evolved individual to continue learning while interacting 
 
 #### Testing and Validation Requirements
 
-- **FR-047**: System MUST be compatible with Gymnasium environments (CartPole-v1, LunarLander-v2, etc.)
+- **FR-047**: System MUST be compatible with Gymnasium environments and any environments following the same interface pattern (CartPole-v1, LunarLanderContinuous-v2, etc.)
 - **FR-048**: All operations MUST support deterministic behavior via random seed configuration
 - **FR-049**: System MUST validate configurations and raise clear errors for invalid inputs
 
@@ -231,15 +242,15 @@ A researcher wants an evolved individual to continue learning while interacting 
 - **SC-007**: Unit tests achieve >90% code coverage across all three main classes
 - **SC-008**: All nbdev notebooks execute without errors when running nbdev_prepare
 - **SC-009**: Documentation automatically generated from notebooks includes working code examples for each major feature
-- **SC-010**: Library successfully controls both CartPole-v1 and LunarLander-v2 environments demonstrating generalizability
+- **SC-010**: Library successfully controls both CartPole-v1 and LunarLanderContinuous-v2 environments demonstrating generalizability
 
 ## Assumptions *(mandatory)*
 
 - Users have Python 3.8+ installed with ability to install pip packages
 - Users are familiar with basic Python programming and Jupyter notebooks
 - Users have basic understanding of Perceptual Control Theory concepts or are willing to learn from documentation
-- Gymnasium environments can be installed and run successfully in the user's environment
-- TensorFlow/Keras runs successfully on the user's hardware (CPU is sufficient, GPU optional)
+- Gymnasium or compatible environments can be installed and run successfully in the user's environment
+- TensorFlow/Keras runs successfully on the user's hardware (CPU is sufficient, GPU optional, parallelization benefits from multiple cores)
 - Users developing the library are familiar with nbdev framework and literate programming
 - DEAP library provides sufficient evolutionary algorithm primitives for the use cases
 - Optuna library provides sufficient hyperparameter optimization capabilities
@@ -256,14 +267,16 @@ A researcher wants an evolved individual to continue learning while interacting 
 ### External Dependencies
 
 - **nbdev**: Literate programming framework for notebook-based development (MANDATORY)
-- **tensorflow**: Keras model implementation for hierarchies (MANDATORY)
-- **gymnasium**: Environment interface (successor to OpenAI Gym) (MANDATORY)
-- **deap**: Evolutionary algorithm framework (MANDATORY)
-- **numpy**: Numerical operations (MANDATORY)
-- **matplotlib**: Visualization of evolution progress and results (MANDATORY)
-- **optuna**: Hyperparameter optimization (MANDATORY)
-- **networkx**: Optional for visualizing hierarchy structure as graphs
+- **tensorflow**: Keras model implementation for hierarchies (SUGGESTED)
+- **gymnasium**: Environment interface (successor to OpenAI Gym) (SUGGESTED)
+- **deap**: Evolutionary algorithm framework (SUGGESTED)
+- **numpy**: Numerical operations (SUGGESTED)
+- **matplotlib**: Visualization of evolution progress and results (SUGGESTED)
+- **optuna**: Hyperparameter optimization (SUGGESTED)
+- **networkx**: For visualizing hierarchy structure as graphs (SUGGESTED)
+- **comet_ml**: Optional for logging evolution experiments
 - **json**: Configuration persistence (Python standard library)
+- **pickle**: Configuration serialization (Python standard library)
 
 ### Internal Dependencies
 
@@ -284,18 +297,13 @@ The following are explicitly NOT included in this feature:
 
 - **Custom environment creation tools**: Users must use existing Gymnasium environments or create their own separately
 - **GUI/web interface**: Library is Python-only, no graphical interface provided
-- **Distributed evolution**: No support for running evolution across multiple machines
 - **Advanced RL algorithms**: No integration with PPO, A3C, or other deep RL methods
-- **Automatic hierarchy structure search**: Users must specify level counts, optimization only tunes weights
-- **Real-time visualization**: No live plotting during evolution (only post-hoc visualization)
 - **Model compression/quantization**: No optimization for deployment or edge devices
 - **Multi-objective optimization**: Only single fitness value supported
 - **Automatic environment detection**: Users must explicitly specify environment name
 - **Cloud deployment tools**: No built-in support for AWS, GCP, or Azure
-- **Pretrained models**: No model zoo or pretrained hierarchies provided
 - **Benchmark suite**: No standardized benchmark environments or comparison tools
 - **Legacy support**: No support for original OpenAI Gym (only Gymnasium)
-- **Alternative deep learning frameworks**: No PyTorch, JAX, or other framework support
 
 ## Notes
 
