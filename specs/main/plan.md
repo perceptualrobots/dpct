@@ -31,19 +31,19 @@ Implement Deep Perceptual Control Theory (DPCT) library enabling researchers to 
 
 ### II. Test-Driven Development (NON-NEGOTIABLE)
 **Status**: ✅ COMPLIANT  
-**Verification**: Unit tests will be written in `*_unittests.ipynb` notebooks before implementation. Tests will cover all functional requirements (FR-001 through FR-049) with deterministic behavior using fixed random seeds. Integration tests will verify environment compatibility, model creation, config save/load, and evolutionary operators.
+**Verification**: Unit tests will be written in `*_unittests.ipynb` notebooks before implementation. Tests will cover all functional requirements (FR-001 through FR-060) with deterministic behavior using fixed random seeds. Integration tests will verify environment compatibility, model creation, config save/load, and evolutionary operators.
 
 ### III. Configuration-Driven Architecture
 **Status**: ✅ COMPLIANT  
-**Verification**: DHPCTIndividual implements `config()`, `save_config()`, `from_config()`, `to_legacy_config()`, and `from_legacy_config()` per FR-005, FR-005a, FR-006, FR-009a. Configurations are pickleable and include all environment, hierarchy, and weight data. Loading saved configs produces identical behavior (SC-002).
+**Verification**: DHPCTIndividual implements `config()`, `save_config()`, `from_config()`, `to_legacy_config()`, and `from_legacy_config()` per FR-005, FR-006, FR-007, FR-011. Configurations are pickleable and include all environment, hierarchy, and weight data. Loading saved configs produces identical behavior (SC-002).
 
 ### IV. Hierarchical Control Purity
 **Status**: ✅ COMPLIANT  
-**Verification**: Each level has perception, reference, comparator (reference - perception), and output layers per FR-010 through FR-019. Flexible perception-observation connections per FR-011. Layer naming follows strict convention: PL##, RL##, CL##, OL##, Observations, Actions, Errors. Comparator values exposed as model outputs.
+**Verification**: Each level has perception, reference, comparator (reference - perception), and output layers per FR-014 through FR-023. Flexible perception-observation connections per FR-015. Layer naming follows strict convention: PL##, RL##, CL##, OL##, Observations, Actions, Errors. Comparator values exposed as model outputs.
 
 ### V. Evolution & Optimization Transparency
 **Status**: ✅ COMPLIANT  
-**Verification**: Generation statistics track min/mean/max fitness, mutation rates, elapsed time per FR-028. Optional comet_ml logging (FR-034a). Execution history recording and visualization (FR-009b, FR-009c). Three network visualization views (FR-019a/b/c). Parallelization support (FR-030). Random structure initialization, pre-trained individuals, and fixed weights support (FR-034b/c/d). Optuna integration with parameter importance and history visualization (FR-039, FR-040).
+**Verification**: Generation statistics track min/mean/max fitness, mutation rates, elapsed time per FR-035. Optional comet_ml logging (FR-042). Execution history recording and visualization (FR-012, FR-013). Three network visualization views (FR-024/25/26). Parallelization support (FR-037). Random structure initialization, pre-trained individuals, and fixed weights support (FR-043/44/45). Optuna integration with parameter importance and history visualization (FR-050, FR-051).
 
 **Overall Assessment**: All constitution principles are satisfied by the feature specification. No violations require justification.
 
@@ -147,7 +147,7 @@ All technical unknowns from specification have been resolved with concrete imple
 6. **PCTControlUnit** - Conceptual PCT control loop (implemented as layer groups)
 7. **ExecutionHistory** - Recorded state transitions during execution
 
-**API Contracts** cover all functional requirements (FR-001 through FR-049) with:
+**API Contracts** cover all functional requirements (FR-001 through FR-060) with:
 - Constructor signatures and parameters
 - Method contracts with inputs, outputs, side effects, and exceptions
 - Property definitions
@@ -174,7 +174,7 @@ All technical unknowns from specification have been resolved with concrete imple
 
 ### IV. Hierarchical Control Purity
 **Status**: ✅ COMPLIANT  
-**Verification**: PCTControlUnit conceptual entity defined with perception, reference, comparator (reference - perception), output components. Data model specifies flexible perception-observation connections per FR-011. Layer naming convention strictly defined (PL##, RL##, CL##, OL##). Comparator values exposed as model outputs per FR-018.
+**Verification**: PCTControlUnit conceptual entity defined with perception, reference, comparator (reference - perception), output components. Data model specifies flexible perception-observation connections per FR-015. Layer naming convention strictly defined (PL##, RL##, CL##, OL##). Comparator values exposed as model outputs per FR-022.
 
 ### V. Evolution & Optimization Transparency
 **Status**: ✅ COMPLIANT  

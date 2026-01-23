@@ -39,7 +39,7 @@ def visualize_hierarchy_layers(
 - `RuntimeError`: If individual not compiled
 - `ImportError`: If networkx not available
 
-**Related**: FR-019a
+**Related**: FR-024
 
 ---
 
@@ -74,7 +74,7 @@ def visualize_pct_units(
 - `RuntimeError`: If individual not compiled
 - `ImportError`: If networkx not available
 
-**Related**: FR-019b
+**Related**: FR-025
 
 ---
 
@@ -112,7 +112,7 @@ def visualize_weighted_network(
 - `RuntimeError`: If individual not compiled
 - `ImportError`: If networkx not available
 
-**Related**: FR-019c
+**Related**: FR-026
 
 ---
 
@@ -149,7 +149,7 @@ def visualize_execution_history(
 **Raises**:
 - `ValueError`: If history empty or metric unknown
 
-**Related**: FR-009c
+**Related**: FR-013
 
 ---
 
@@ -182,7 +182,7 @@ def visualize_layer_activations(
 **Raises**:
 - `ValueError`: If layer_names not in history
 
-**Related**: FR-009c
+**Related**: FR-013
 
 ---
 
@@ -268,7 +268,7 @@ def plot_parameter_importance(
 - Displays matplotlib plot or saves to file
 - Uses optuna.visualization.plot_param_importances()
 
-**Related**: FR-040
+**Related**: FR-051
 
 ---
 
@@ -293,7 +293,7 @@ def plot_optimization_history(
 - Displays matplotlib plot or saves to file
 - Uses optuna.visualization.plot_optimization_history()
 
-**Related**: FR-040
+**Related**: FR-051
 
 ---
 
@@ -344,8 +344,8 @@ plot_optimization_history(study)
 
 ## Related Requirements
 
-- FR-009c: Execution history visualization
-- FR-019a: Layer-level network diagram
-- FR-019b: PCT unit network diagram
-- FR-019c: Weighted network diagram
-- FR-040: Optimization result visualization
+- FR-013: Execution history visualization
+- FR-024: Layer-level network diagram
+- FR-025: PCT unit network diagram
+- FR-026: Weighted network diagram
+- FR-051: Optimization result visualization

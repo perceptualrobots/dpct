@@ -358,11 +358,11 @@ loaded = DHPCTIndividual.from_config(individual.config())
 - FR-002: Support from_config() class method
 - FR-003: compile() creates Keras model
 - FR-004: run() executes in environment
-- FR-005, FR-005a: config() returns pickleable dict
-- FR-006: save_config() persists to JSON
-- FR-007: mate() creates offspring
-- FR-008: mutate() modifies structure/weights
-- FR-009: evaluate() runs multiple trials
-- FR-009a: to/from_legacy_config() methods
-- FR-009b: run() supports history recording
-- FR-042-046: Online learning features
+- FR-005, FR-006: config() returns pickleable dict
+- FR-007: save_config() persists to JSON
+- FR-008: mate() creates offspring
+- FR-009: mutate() modifies structure/weights
+- FR-010: evaluate() runs multiple trials
+- FR-011: to/from_legacy_config() methods
+- FR-012: run() supports history recording
+- FR-053-057: Online learning features

@@ -295,17 +295,17 @@ evolver.plot_evolution(metrics=["min", "mean", "max"])
 
 ## Related Requirements
 
-- FR-025: Initialize with pop_size, generations, termination criteria
-- FR-026: setup_evolution() configures DEAP toolbox
-- FR-027: run_evolution() executes algorithm
-- FR-028: Track generation statistics
-- FR-029: evolve_static_termination for early stopping
-- FR-030: Parallelization support
-- FR-031: save_arch_best option
-- FR-032: save_arch_all option
-- FR-033: run_best option
-- FR-034: save_results() method
-- FR-034a: comet_ml logging
-- FR-034b: random_structure initialization
-- FR-034c: initial_individuals support
-- FR-034d: Fixed weights/levels support (inherited from DHPCTIndividual)
+- FR-032: Initialize with pop_size, generations, termination criteria
+- FR-033: setup_evolution() configures DEAP toolbox
+- FR-034: run_evolution() executes algorithm
+- FR-035: Track generation statistics
+- FR-036: evolve_static_termination for early stopping
+- FR-037: Parallelization support
+- FR-038: save_arch_best option
+- FR-039: save_arch_all option
+- FR-040: run_best option
+- FR-041: save_results() method
+- FR-042: comet_ml logging
+- FR-043: random_structure initialization
+- FR-044: initial_individuals support
+- FR-045: Fixed weights/levels support (inherited from DHPCTIndividual)

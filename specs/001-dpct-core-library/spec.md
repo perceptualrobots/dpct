@@ -141,79 +141,79 @@ A researcher wants an evolved individual to continue learning while interacting 
 - **FR-003**: DHPCTIndividual MUST compile() to create a Keras Functional API model representing the PCT hierarchy
 - **FR-004**: DHPCTIndividual MUST support run(steps, train, early_termination) to execute in environment and return fitness
 - **FR-005**: DHPCTIndividual MUST support config() to return complete configuration dictionary including env, hierarchy, and weights
-- **FR-005a**: Configuration dictionaries MUST be pickleable for serialization beyond JSON
-- **FR-006**: DHPCTIndividual MUST support save_config(filepath) to persist configuration as JSON
-- **FR-007**: DHPCTIndividual MUST support mate(other) to create two offspring via crossover
-- **FR-008**: DHPCTIndividual MUST support mutate(struct_prob, weight_prob) to modify structure and/or weights
-- **FR-009**: DHPCTIndividual MUST support evaluate(nevals) to run multiple trials and return fitness score
-- **FR-009a**: DHPCTIndividual MUST support converting to and from legacy configuration formats via to_legacy_config() and from_legacy_config() methods
-- **FR-009b**: DHPCTIndividual.run() MUST support optional history recording of all observations, layer values, and actions
-- **FR-009c**: System MUST provide visualization functions for execution history showing observations, layer activations, and actions over time
+- **FR-006**: Configuration dictionaries MUST be pickleable for serialization beyond JSON
+- **FR-007**: DHPCTIndividual MUST support save_config(filepath) to persist configuration as JSON
+- **FR-008**: DHPCTIndividual MUST support mate(other) to create two offspring via crossover
+- **FR-009**: DHPCTIndividual MUST support mutate(struct_prob, weight_prob) to modify structure and/or weights
+- **FR-010**: DHPCTIndividual MUST support evaluate(nevals) to run multiple trials and return fitness score
+- **FR-011**: DHPCTIndividual MUST support converting to and from legacy configuration formats via to_legacy_config() and from_legacy_config() methods
+- **FR-012**: DHPCTIndividual.run() MUST support optional history recording of all observations, layer values, and actions
+- **FR-013**: System MUST provide visualization functions for execution history showing observations, layer activations, and actions over time
 
 #### Hierarchy Structure Requirements
 
-- **FR-010**: Each level MUST have perception, reference, comparator, and output layers following PCT principles
-- **FR-011**: Lowest level perception layer MUST receive inputs from environment observations, unless another level is explicitly specified for connection to observations
-- **FR-012**: Higher level perception layers MUST receive inputs from all perception values of the level below
-- **FR-013**: Highest level reference layer MUST receive inputs from external reference input layer
-- **FR-014**: Lower level reference layers MUST receive inputs from all output values of the level above
-- **FR-015**: Comparator at each level MUST compute reference minus perception (element-wise subtraction)
-- **FR-016**: Output at each level MUST be element-wise multiplication of weights and comparator values
-- **FR-017**: Actions MUST be computed from Level 0 output layer
-- **FR-018**: Errors output MUST collect all comparator values across all levels
-- **FR-019**: Model layers MUST follow naming convention: PL## (perception), RL## (reference), CL## (comparator), OL## (output), Observations, Actions, Errors
-- **FR-019a**: System MUST provide visualization function to display network diagram of hierarchy showing all layers, nodes, and connections
-- **FR-019b**: System MUST provide visualization function to display PCT control units as single nodes (combining reference, perception, comparator, output)
-- **FR-019c**: System MUST provide visualization function to display hierarchy network with weight values shown on connections
+- **FR-014**: Each level MUST have perception, reference, comparator, and output layers following PCT principles
+- **FR-015**: Lowest level perception layer MUST receive inputs from environment observations, unless another level is explicitly specified for connection to observations
+- **FR-016**: Higher level perception layers MUST receive inputs from all perception values of the level below
+- **FR-017**: Highest level reference layer MUST receive inputs from external reference input layer
+- **FR-018**: Lower level reference layers MUST receive inputs from all output values of the level above
+- **FR-019**: Comparator at each level MUST compute reference minus perception (element-wise subtraction)
+- **FR-020**: Output at each level MUST be element-wise multiplication of weights and comparator values
+- **FR-021**: Actions MUST be computed from Level 0 output layer
+- **FR-022**: Errors output MUST collect all comparator values across all levels
+- **FR-023**: Model layers MUST follow naming convention: PL## (perception), RL## (reference), CL## (comparator), OL## (output), Observations, Actions, Errors
+- **FR-024**: System MUST provide visualization function to display network diagram of hierarchy showing all layers, nodes, and connections
+- **FR-025**: System MUST provide visualization function to display PCT control units as single nodes (combining reference, perception, comparator, output)
+- **FR-026**: System MUST provide visualization function to display hierarchy network with weight values shown on connections
 
 #### Weight and Activation Requirements
 
-- **FR-020**: System MUST support float weight type as default
-- **FR-021**: System MUST support boolean weight type (binary 0/1 values)
-- **FR-022**: System MUST support ternary weight type (-1, 0, 1 values)
-- **FR-023**: Default activation function MUST be linear unless specified in activation_funcs
-- **FR-024**: System MUST support per-level activation function configuration
+- **FR-027**: System MUST support float weight type as default
+- **FR-028**: System MUST support boolean weight type (binary 0/1 values)
+- **FR-029**: System MUST support ternary weight type (-1, 0, 1 values)
+- **FR-030**: Default activation function MUST be linear unless specified in activation_funcs
+- **FR-031**: System MUST support per-level activation function configuration
 
 #### Evolution Requirements
 
-- **FR-025**: DHPCTEvolver MUST initialize with population size, generation count, and termination criteria
-- **FR-026**: DHPCTEvolver MUST support setup_evolution(template_individual, fitness_function, minimize) to configure DEAP toolbox
-- **FR-027**: DHPCTEvolver MUST support run_evolution(verbose) to execute evolutionary algorithm
-- **FR-028**: DHPCTEvolver MUST track generation statistics: min/mean/max fitness, mutation percentages, elapsed time
-- **FR-029**: DHPCTEvolver MUST support early termination based on evolve_static_termination (unchanged generations)
-- **FR-030**: DHPCTEvolver MUST support parallelization of fitness evaluations during evolution
-- **FR-031**: DHPCTEvolver MUST support save_arch_best option to save best individual configuration each generation
-- **FR-032**: DHPCTEvolver MUST support save_arch_all option to save all individual configurations each generation
-- **FR-033**: DHPCTEvolver MUST support run_best option to evaluate and display best individual each generation
-- **FR-034**: DHPCTEvolver MUST support save_results(path) to persist evolution statistics and configurations
-- **FR-034a**: DHPCTEvolver MUST support optional logging to comet_ml experiments for tracking evolution progress
-- **FR-034b**: DHPCTEvolver MUST support initialization with random hierarchy structures (random level counts and units per level within specified limits)
-- **FR-034c**: DHPCTEvolver MUST support initialization with existing or pre-trained individuals in addition to random initialization
-- **FR-034d**: DHPCTEvolver MUST support marking specific weights, nodes, or levels as FIXED to prevent modification during evolution
+- **FR-032**: DHPCTEvolver MUST initialize with population size, generation count, and termination criteria
+- **FR-033**: DHPCTEvolver MUST support setup_evolution(template_individual, fitness_function, minimize) to configure DEAP toolbox
+- **FR-034**: DHPCTEvolver MUST support run_evolution(verbose) to execute evolutionary algorithm
+- **FR-035**: DHPCTEvolver MUST track generation statistics: min/mean/max fitness, mutation percentages, elapsed time
+- **FR-036**: DHPCTEvolver MUST support early termination based on evolve_static_termination (unchanged generations)
+- **FR-037**: DHPCTEvolver MUST support parallelization of fitness evaluations during evolution
+- **FR-038**: DHPCTEvolver MUST support save_arch_best option to save best individual configuration each generation
+- **FR-039**: DHPCTEvolver MUST support save_arch_all option to save all individual configurations each generation
+- **FR-040**: DHPCTEvolver MUST support run_best option to evaluate and display best individual each generation
+- **FR-041**: DHPCTEvolver MUST support save_results(path) to persist evolution statistics and configurations
+- **FR-042**: DHPCTEvolver MUST support optional logging to comet_ml experiments for tracking evolution progress
+- **FR-043**: DHPCTEvolver MUST support initialization with random hierarchy structures (random level counts and units per level within specified limits)
+- **FR-044**: DHPCTEvolver MUST support initialization with existing or pre-trained individuals in addition to random initialization
+- **FR-045**: DHPCTEvolver MUST support marking specific weights, nodes, or levels as FIXED to prevent modification during evolution
 
 #### Optimization Requirements
 
-- **FR-035**: DHPCTOptimizer MUST support flexible parameter specification with fixed/variable flags
-- **FR-036**: DHPCTOptimizer MUST initialize with n_trials, timeout, pruner, sampler, study_name, and storage
-- **FR-037**: DHPCTOptimizer MUST support define_objective(template_individual, fitness_function, evaluation_budget)
-- **FR-038**: DHPCTOptimizer MUST support run_optimization(verbose) to execute Optuna hyperparameter search
-- **FR-039**: DHPCTOptimizer MUST support get_best_params() to retrieve optimal parameter combination
-- **FR-040**: DHPCTOptimizer MUST support visualize_results() to generate parameter importance and history plots
-- **FR-041**: DHPCTOptimizer MUST support save_results(path) to persist optimization study data
+- **FR-046**: DHPCTOptimizer MUST support flexible parameter specification with fixed/variable flags
+- **FR-047**: DHPCTOptimizer MUST initialize with n_trials, timeout, pruner, sampler, study_name, and storage
+- **FR-048**: DHPCTOptimizer MUST support define_objective(template_individual, fitness_function, evaluation_budget)
+- **FR-049**: DHPCTOptimizer MUST support run_optimization(verbose) to execute Optuna hyperparameter search
+- **FR-050**: DHPCTOptimizer MUST support get_best_params() to retrieve optimal parameter combination
+- **FR-051**: DHPCTOptimizer MUST support visualize_results() to generate parameter importance and history plots
+- **FR-052**: DHPCTOptimizer MUST support save_results(path) to persist optimization study data
 
 #### Online Learning Requirements
 
-- **FR-042**: DHPCTIndividual.run() MUST support train=True to enable online learning during execution
-- **FR-043**: Online learning MUST use comparator values as training outputs with target of zero
-- **FR-044**: Online learning MUST support configurable learning rate and optimizer (e.g., adam)
-- **FR-045**: Online learning MUST support train_every_n_steps to control training frequency
-- **FR-046**: Online learning MUST support error_weight_coefficients to weight different levels' errors
+- **FR-053**: DHPCTIndividual.run() MUST support train=True to enable online learning during execution
+- **FR-054**: Online learning MUST use comparator values as training outputs with target of zero
+- **FR-055**: Online learning MUST support configurable learning rate and optimizer (e.g., adam)
+- **FR-056**: Online learning MUST support train_every_n_steps to control training frequency
+- **FR-057**: Online learning MUST support error_weight_coefficients to weight different levels' errors
 
 #### Testing and Validation Requirements
 
-- **FR-047**: System MUST be compatible with Gymnasium environments and any environments following the same interface pattern (CartPole-v1, LunarLanderContinuous-v2, etc.)
-- **FR-048**: All operations MUST support deterministic behavior via random seed configuration
-- **FR-049**: System MUST validate configurations and raise clear errors for invalid inputs
+- **FR-058**: System MUST be compatible with Gymnasium environments and any environments following the same interface pattern (CartPole-v1, LunarLanderContinuous-v2, etc.)
+- **FR-059**: All operations MUST support deterministic behavior via random seed configuration
+- **FR-060**: System MUST validate configurations and raise clear errors for invalid inputs
 
 ### Key Entities
 

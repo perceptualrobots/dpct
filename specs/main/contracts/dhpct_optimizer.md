@@ -410,10 +410,10 @@ best_individual, stats = final_evolver.run_evolution()
 
 ## Related Requirements
 
-- FR-035: Flexible parameter specification with fixed/variable flags
-- FR-036: Initialize with n_trials, timeout, pruner, sampler, study_name, storage
-- FR-037: define_objective() with template, fitness, budget
-- FR-038: run_optimization() executes Optuna search
-- FR-039: get_best_params() retrieves optimal combination
-- FR-040: visualize_results() generates plots
-- FR-041: save_results() persists study data
+- FR-046: Flexible parameter specification with fixed/variable flags
+- FR-047: Initialize with n_trials, timeout, pruner, sampler, study_name, storage
+- FR-048: define_objective() with template, fitness, budget
+- FR-049: run_optimization() executes Optuna search
+- FR-050: get_best_params() retrieves optimal combination
+- FR-051: visualize_results() generates plots
+- FR-052: save_results() persists study data
