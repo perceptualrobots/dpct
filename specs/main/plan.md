@@ -71,9 +71,9 @@ specs/001-dpct-core-library/
 nbs/                     # Jupyter notebooks (primary development)
 ├── _quarto.yml          # Documentation configuration
 ├── index.ipynb          # Library overview and getting started
-├── 00_core.ipynb        # DHPCTIndividual implementation
-├── 00_core_usage.ipynb  # DHPCTIndividual usage examples
-├── 00_core_unittests.ipynb  # DHPCTIndividual unit tests
+├── 00_individual.ipynb        # DHPCTIndividual implementation
+├── 00_individual_usage.ipynb  # DHPCTIndividual usage examples
+├── 00_individual_unittests.ipynb  # DHPCTIndividual unit tests
 ├── 01_evolver.ipynb     # DHPCTEvolver implementation
 ├── 01_evolver_usage.ipynb   # DHPCTEvolver usage examples
 ├── 01_evolver_unittests.ipynb  # DHPCTEvolver unit tests
@@ -87,7 +87,7 @@ nbs/                     # Jupyter notebooks (primary development)
 
 dpct/                    # Auto-generated Python modules (via nbdev)
 ├── __init__.py
-├── core.py              # Exported from 00_core.ipynb
+├── individual.py        # Exported from 00_individual.ipynb
 ├── evolver.py           # Exported from 01_evolver.ipynb
 ├── optimizer.py         # Exported from 02_optimizer.ipynb
 └── visualization.py     # Exported from 03_visualization.ipynb
@@ -205,8 +205,8 @@ Phase 2 (implementation task breakdown) is handled by the `/speckit.tasks` comma
 
 **Next Steps**:
 1. Run `/speckit.tasks` command to generate Phase 2 implementation tasks
-2. Begin nbdev development with 00_core.ipynb for DHPCTIndividual
-3. Follow TDD workflow: write tests in 00_core_unittests.ipynb first
+2. Begin nbdev development with 00_individual.ipynb for DHPCTIndividual
+3. Follow TDD workflow: write tests in 00_individual_unittests.ipynb first
 4. Implement remaining components following three-notebook pattern
 5. Run nbdev_prepare after each notebook modification
 

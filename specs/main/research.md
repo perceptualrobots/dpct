@@ -49,6 +49,7 @@ model = Model(inputs=[observations, references_input],
 - Mature library with extensive documentation
 - Compatible with custom fitness functions and individual representations
 - Supports parallelization via `multiprocessing` or `scoop`
+- Mutation includes both weight modification and structural changes (add/remove levels or units)
 
 **Alternatives Considered**:
 - **Custom evolution from scratch**: Rejected - complex to implement correctly, DEAP is well-tested
@@ -69,7 +70,7 @@ toolbox.register("individual", create_individual, template)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("evaluate", fitness_function)
 toolbox.register("mate", crossover_operator)
-toolbox.register("mutate", mutation_operator)
+toolbox.register("mutate", mutation_operator)  # mutates weights AND structure
 toolbox.register("select", tools.selTournament, tournsize=3)
 
 # Run evolution
@@ -336,7 +337,8 @@ class DHPCTEvolver:
 - Float: standard NumPy float arrays
 - Boolean: NumPy arrays with dtype=bool or constrained to {0, 1}
 - Ternary: NumPy arrays constrained to {-1, 0, 1}
-- Mutation operators respect constraints when modifying weights
+- Weight mutation operators respect constraints when modifying weights
+- Structural mutation (separate from weight mutation) randomly adds/removes levels or units per configured probabilities
 
 **Implementation Approach**:
 ```python
@@ -400,7 +402,21 @@ class DHPCTIndividual:
         self.fixed_weights = fixed_weights or set()  # set of layer names
         self.fixed_levels = fixed_levels or set()    # set of level indices
     
-    def mutate(self, prob=0.1):
+    def mutate(self, weight_prob=0.1, structure_prob=0.1):
+        # Structural mutation: add/remove levels or units
+        if np.random.random() < structure_prob:
+            mutation_type = np.random.choice(['add_level', 'remove_level', 
+                                             'add_unit', 'remove_unit'])
+            if mutation_type == 'add_level':
+                self.add_random_level()
+            elif mutation_type == 'remove_level' and len(self.levels) > 2:
+                self.remove_random_level()
+            elif mutation_type == 'add_unit':
+                self.add_unit_to_random_level()
+            elif mutation_type == 'remove_unit':
+                self.remove_unit_from_random_level()
+        
+        # Weight mutation
         for layer_name, weights in self.get_weights().items():
             # Skip if layer is marked as fixed
             if layer_name in self.fixed_weights:
@@ -410,15 +426,15 @@ class DHPCTIndividual:
             if level in self.fixed_levels:
                 continue
             
-            # Apply mutation
-            mutated = mutate_weights(weights, self.weight_types[layer_name], prob)
+            # Apply weight mutation
+            mutated = mutate_weights(weights, self.weight_types[layer_name], weight_prob)
             self.set_layer_weights(layer_name, mutated)
 ```
 
 ## Best Practices Summary
 
 1. **Keras Model Building**: Use Functional API with explicit layer naming for traceability
-2. **Evolution**: Leverage DEAP toolbox pattern for flexibility, use multiprocessing for parallelization
+2. **Evolution**: Leverage DEAP toolbox pattern for flexibility, use multiprocessing for parallelization. Mutation operates on both weights (Gaussian/flip/choice) and structure (add/remove levels/units)
 3. **Optimization**: Use Optuna TPE sampler as default, enable pruning for efficiency
 4. **Environment Integration**: Always handle both `terminated` and `truncated` flags from Gymnasium
 5. **Visualization**: Build NetworkX graphs from model structure, use Matplotlib for rendering
