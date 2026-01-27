@@ -67,10 +67,12 @@
 - [ ] T021 [US1] Implement DHPCTIndividual.run() with environment interaction loop in nbs/00_individual.ipynb
 - [ ] T022 [US1] Add early_termination support to run() method in nbs/00_individual.ipynb
 - [ ] T023 [US1] Add fitness calculation and return in run() method in nbs/00_individual.ipynb
+- [ ] T023a [US1] Add support for different fitness calculation methods including pct.errors functions (e.g., RMS, MAE) in nbs/00_individual.ipynb
 - [ ] T024 [US1] Add support for obs_connection_level parameter in compile() in nbs/00_individual.ipynb
 - [ ] T025 [US1] Add unit tests for __init__() in nbs/00_individual_unittests.ipynb
 - [ ] T026 [US1] Add unit tests for compile() and model structure in nbs/00_individual_unittests.ipynb
 - [ ] T027 [US1] Add unit tests for run() with CartPole environment in nbs/00_individual_unittests.ipynb
+- [ ] T027a [P] [US1] Add unit tests for different fitness calculation methods (cumulative reward, pct.errors.RMS, pct.errors.MAE) in nbs/00_individual_unittests.ipynb
 - [ ] T028 [US1] Add unit tests for different weight types in nbs/00_individual_unittests.ipynb
 - [ ] T028a [P] [US1] Add PCT library comparison test: linear activation layer vs pct.functions.WeightedSum in nbs/00_individual_unittests.ipynb
 - [ ] T028b [P] [US1] Add PCT library comparison test: perception layer (linear activation) vs pct.functions.WeightedSum in nbs/00_individual_unittests.ipynb
@@ -395,14 +397,14 @@ Once **Phase 3 (US1)** completes:
 
 1. ✅ Complete **Phase 1: Setup** (4 tasks)
 2. ✅ Complete **Phase 2: Foundational** (5 tasks) ← CRITICAL BLOCKER
-3. ✅ Complete **Phase 3: User Story 1** (25 tasks) ← Create/run hierarchies + PCT library validation
+3. ✅ Complete **Phase 3: User Story 1** (27 tasks) ← Create/run hierarchies + PCT library validation + fitness methods
 4. ✅ Complete **Phase 4: User Story 2** (12 tasks) ← Save/load configs
 5. ✅ Complete **Phase 5: User Story 3** (28 tasks) ← Evolution
 6. **STOP and VALIDATE**: Test MVP independently
 7. **Demo/Document**: Show researchers how to evolve hierarchies
 8. **Continue if successful**: Add User Stories 4, 5, 6 as enhancements
 
-**Total MVP Tasks**: 74 tasks (T001-T070, includes 4 PCT library comparison tests)
+**Total MVP Tasks**: 76 tasks (T001-T070, includes 4 PCT library comparison tests + 2 fitness calculation tasks)
 
 ### Incremental Delivery
 
@@ -478,7 +480,8 @@ With 3 developers after Foundational phase:
 - Three-notebook pattern per component: implementation, usage, unittests
 - Run `nbdev_prepare` after each modification to export and test
 - Tests are written in `*_unittests.ipynb` notebooks (not separate pytest files)
-- **PCT library comparison**: Individual layer behaviors are validated against equivalent functions from the PCT library (https://pypi.org/project/pct/) to ensure correctness (e.g., linear layers vs pct.functions.WeightedSum, comparators vs pct.functions.Comparator)
+- **PCT library comparison**: Individual layer behaviors are validated against equivalent functions from the PCT library (https://pypi.org/project/pct/) to ensure correctness (e.g., linear layers vs pct.functions.WeightedSum, comparators vs pct.functions.Subtract)
+- **Fitness calculation**: Support multiple fitness metrics including cumulative reward (default) and error functions from pct.errors module (e.g., RMS, MAE)
 - Install PCT library with: `pip install pct`
 - [P] tasks are in different files and can run in parallel
 - [Story] label maps each task to its user story for traceability
