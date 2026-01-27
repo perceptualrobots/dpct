@@ -4,7 +4,7 @@
 **Input**: Design documents from `specs/main/` and `specs/001-dpct-core-library/`  
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅
 
-**Tests**: Tests are NOT included per the specification. The library uses nbdev test framework with unit tests in `*_unittests.ipynb` notebooks.
+**Tests**: Tests include unit tests in `*_unittests.ipynb` notebooks following nbdev framework. Individual layers are tested against perceptual functions from the PCT library (https://pypi.org/project/pct/) to verify behavioral equivalence (e.g., linear activation layers vs pct.functions.WeightedSum).
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story. Each component follows nbdev's three-notebook pattern: implementation, usage examples, and unit tests.
 
@@ -35,7 +35,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Install and verify core dependencies: tensorflow, gymnasium, deap, numpy, optuna, matplotlib, networkx
+- [ ] T005 Install and verify core dependencies: tensorflow, gymnasium, deap, numpy, optuna, matplotlib, networkx, pct
 - [ ] T006 [P] Create base configuration utilities for JSON/pickle serialization
 - [ ] T007 [P] Create base environment wrapper utilities for Gymnasium interface
 - [ ] T008 [P] Setup DEAP toolbox helper functions for evolutionary operators
@@ -49,7 +49,7 @@
 
 **Goal**: Enable researchers to create hierarchical control systems, compile them into Keras models, and execute them in environments
 
-**Independent Test**: Create DHPCTIndividual with levels [4, 3, 2], compile it, run in CartPole-v1 for 500 steps, verify it produces fitness score and controls environment state
+**Independent Test**: Create DHPCTIndividual with levels [4, 3, 2], compile it, run in CartPole-v1 for 500 steps, verify it produces fitness score and controls environment state. Additionally verify individual layer outputs match corresponding PCT library function outputs for equivalent inputs.
 
 ### Implementation for User Story 1
 
@@ -72,10 +72,14 @@
 - [ ] T026 [US1] Add unit tests for compile() and model structure in nbs/00_individual_unittests.ipynb
 - [ ] T027 [US1] Add unit tests for run() with CartPole environment in nbs/00_individual_unittests.ipynb
 - [ ] T028 [US1] Add unit tests for different weight types in nbs/00_individual_unittests.ipynb
+- [ ] T028a [P] [US1] Add PCT library comparison test: linear activation layer vs pct.functions.WeightedSum in nbs/00_individual_unittests.ipynb
+- [ ] T028b [P] [US1] Add PCT library comparison test: perception layer (linear activation) vs pct.functions.WeightedSum in nbs/00_individual_unittests.ipynb
+- [ ] T028c [P] [US1] Add PCT library comparison test: comparator layer (reference - perception) vs pct.functions.Subtract in nbs/00_individual_unittests.ipynb
+- [ ] T028d [P] [US1] Add PCT library comparison test: output layer (element-wise multiplication of inputs with weights) vs pct.functions.WeightedSum in nbs/00_individual_unittests.ipynb
 - [ ] T029 [US1] Create 00_individual_usage.ipynb with basic usage examples in nbs/
 - [ ] T030 [US1] Run nbdev_prepare to export code and verify tests pass
 
-**Checkpoint**: At this point, User Story 1 should be fully functional - researchers can create, compile, and run hierarchies
+**Checkpoint**: At this point, User Story 1 should be fully functional - researchers can create, compile, and run hierarchies. All DPCT layers have been validated against equivalent PCT library functions to ensure behavioral correctness.
 
 ---
 
@@ -391,14 +395,14 @@ Once **Phase 3 (US1)** completes:
 
 1. ✅ Complete **Phase 1: Setup** (4 tasks)
 2. ✅ Complete **Phase 2: Foundational** (5 tasks) ← CRITICAL BLOCKER
-3. ✅ Complete **Phase 3: User Story 1** (21 tasks) ← Create/run hierarchies
+3. ✅ Complete **Phase 3: User Story 1** (25 tasks) ← Create/run hierarchies + PCT library validation
 4. ✅ Complete **Phase 4: User Story 2** (12 tasks) ← Save/load configs
 5. ✅ Complete **Phase 5: User Story 3** (28 tasks) ← Evolution
 6. **STOP and VALIDATE**: Test MVP independently
 7. **Demo/Document**: Show researchers how to evolve hierarchies
 8. **Continue if successful**: Add User Stories 4, 5, 6 as enhancements
 
-**Total MVP Tasks**: 70 tasks (T001-T070)
+**Total MVP Tasks**: 74 tasks (T001-T070, includes 4 PCT library comparison tests)
 
 ### Incremental Delivery
 
@@ -474,6 +478,8 @@ With 3 developers after Foundational phase:
 - Three-notebook pattern per component: implementation, usage, unittests
 - Run `nbdev_prepare` after each modification to export and test
 - Tests are written in `*_unittests.ipynb` notebooks (not separate pytest files)
+- **PCT library comparison**: Individual layer behaviors are validated against equivalent functions from the PCT library (https://pypi.org/project/pct/) to ensure correctness (e.g., linear layers vs pct.functions.WeightedSum, comparators vs pct.functions.Comparator)
+- Install PCT library with: `pip install pct`
 - [P] tasks are in different files and can run in parallel
 - [Story] label maps each task to its user story for traceability
 - Commit after each task or logical group
