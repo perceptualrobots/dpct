@@ -5,4 +5,12 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://perceptualrobots.github.io',
                 'git_url': 'https://github.com/perceptualrobots/dpct',
                 'lib_path': 'dpct'},
-  'syms': {'dpct.core': {'dpct.core.foo': ('core.html#foo', 'dpct/core.py')}}}
+  'syms': { 'dpct.core': {'dpct.core.foo': ('core.html#foo', 'dpct/core.py')},
+            'dpct.utils': { 'dpct.utils.create_environment': ('utils.html#create_environment', 'dpct/utils.py'),
+                            'dpct.utils.get_env_properties': ('utils.html#get_env_properties', 'dpct/utils.py'),
+                            'dpct.utils.load_config_json': ('utils.html#load_config_json', 'dpct/utils.py'),
+                            'dpct.utils.load_config_pickle': ('utils.html#load_config_pickle', 'dpct/utils.py'),
+                            'dpct.utils.register_operators': ('utils.html#register_operators', 'dpct/utils.py'),
+                            'dpct.utils.save_config_json': ('utils.html#save_config_json', 'dpct/utils.py'),
+                            'dpct.utils.save_config_pickle': ('utils.html#save_config_pickle', 'dpct/utils.py'),
+                            'dpct.utils.setup_deap_fitness': ('utils.html#setup_deap_fitness', 'dpct/utils.py')}}}
