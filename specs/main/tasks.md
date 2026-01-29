@@ -55,8 +55,8 @@
 
 - [X] T010 [P] [US1] Create 00_individual.ipynb with DHPCTIndividual class skeleton in nbs/
 - [X] T011 [P] [US1] Create 00_individual_unittests.ipynb in nbs/ with test structure
-- [ ] T012 [US1] Implement DHPCTIndividual.__init__() with env_name, levels, activation_funcs, weight_types in nbs/00_individual.ipynb
-- [ ] T013 [US1] Implement DHPCTIndividual.compile() to build Keras Functional API model in nbs/00_individual.ipynb
+- [X] T012 [US1] Implement DHPCTIndividual.__init__() with env_name, levels, activation_funcs, weight_types in nbs/00_individual.ipynb
+- [X] T013 [US1] Implement DHPCTIndividual.compile() to build Keras Functional API model in nbs/00_individual.ipynb
 - [ ] T014 [US1] Create perception layers (PL##) with correct inputs per level in nbs/00_individual.ipynb
 - [ ] T015 [US1] Create reference layers (RL##) with correct inputs per level in nbs/00_individual.ipynb
 - [ ] T016 [US1] Create comparator layers (CL##) computing reference minus perception in nbs/00_individual.ipynb
