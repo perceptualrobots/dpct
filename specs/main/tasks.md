@@ -63,10 +63,10 @@
 - [X] T017 [US1] Create output layers (OL##) computing weighted comparator values in nbs/00_individual.ipynb
 - [X] T018 [US1] Connect Level 0 to Observations input and Actions output in nbs/00_individual.ipynb
 - [X] T019 [US1] Connect all comparators to Errors output in nbs/00_individual.ipynb
-- [ ] T020 [US1] Implement weight initialization for float, boolean, and ternary types in nbs/00_individual.ipynb
-- [ ] T021 [US1] Implement DHPCTIndividual.run() with environment interaction loop in nbs/00_individual.ipynb
-- [ ] T022 [US1] Add early_termination support to run() method in nbs/00_individual.ipynb
-- [ ] T023 [US1] Add fitness calculation and return in run() method in nbs/00_individual.ipynb
+- [X] T020 [US1] Implement weight initialization for float, boolean, and ternary types in nbs/00_individual.ipynb
+- [X] T021 [US1] Implement DHPCTIndividual.run() with environment interaction loop in nbs/00_individual.ipynb
+- [X] T022 [US1] Add early_termination support to run() method in nbs/00_individual.ipynb
+- [X] T023 [US1] Add fitness calculation and return in run() method in nbs/00_individual.ipynb
 - [ ] T023a [US1] Add support for different fitness calculation methods including pct.errors functions (e.g., RMS, MAE) in nbs/00_individual.ipynb
 - [ ] T024 [US1] Add support for obs_connection_level parameter in compile() in nbs/00_individual.ipynb
 - [ ] T025 [US1] Add unit tests for __init__() in nbs/00_individual_unittests.ipynb

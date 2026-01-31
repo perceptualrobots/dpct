@@ -176,14 +176,11 @@ class DHPCTIndividual:
         comparator_outputs = []  # One per level (these become Errors output)
         output_layer_outputs = []  # One per level
         
-        # TWO-PASS APPROACH: Build perception/output first, then reference layers
-        # This is necessary because reference inputs for lower levels come from
-        # output layers of higher levels that don't exist yet in a single pass
+        # TWO-PASS APPROACH: Build perception layers first, then reference/comparator/output
+        # Pass 1: Build perception layers bottom-up (higher levels perceive lower level perceptions)
+        # Pass 2: Build reference/comparator/output top-down (lower levels get references from higher outputs)
         
-        # === PASS 1: Build perception, comparator, and output layers ===
-        # We'll create temporary references and rebuild them in pass 2
-        temp_reference_inputs = []
-        
+        # === PASS 1: Build perception layers (bottom-up) ===
         for level_idx, num_units in enumerate(self.levels):
             level_name = f"{level_idx:02d}"
             
@@ -196,8 +193,8 @@ class DHPCTIndividual:
                 # Level 0: if not observation level, use observations
                 perception_input = observations
             else:
-                # Higher levels: perceive output from level below
-                perception_input = output_layer_outputs[level_idx - 1]
+                # Higher levels: perceive the PERCEPTIONS from level below (not outputs!)
+                perception_input = perception_outputs[level_idx - 1]
             
             # Create perception layer (weighted sum with activation)
             perception = layers.Dense(
@@ -208,21 +205,16 @@ class DHPCTIndividual:
                 kernel_initializer=self._get_weight_initializer(self.weight_types[level_idx])
             )(perception_input)
             perception_outputs.append(perception)
-            
-            # Store temp reference input for this level (will be properly connected in pass 2)
-            temp_reference_inputs.append(None)
-            reference_outputs.append(None)  # Placeholder
-            
-            # Create temporary comparator and output for structure
-            # These will be rebuilt in pass 2 with correct reference connections
-            comparator_outputs.append(None)  # Placeholder
-            
-            # Create output layer placeholder (just pass through comparator for now)
-            # Will be properly built in pass 2
-            output_layer_outputs.append(None)  # Placeholder
         
-        # === PASS 2: Build reference, comparator, and output layers with correct connections ===
-        # Now we build from top to bottom so reference connections work
+        # === PASS 2: Build reference, comparator, and output layers (top-down) ===
+        # Must build top-down because lower level references come from higher level outputs
+        # === PASS 2: Build reference, comparator, and output layers (top-down) ===
+        # Must build top-down because lower level references come from higher level outputs
+        # Initialize lists with proper length for indexed access
+        reference_outputs = [None] * len(self.levels)
+        comparator_outputs = [None] * len(self.levels)
+        output_layer_outputs = [None] * len(self.levels)
+        
         for level_idx in reversed(range(len(self.levels))):
             num_units = self.levels[level_idx]
             level_name = f"{level_idx:02d}"
@@ -233,8 +225,7 @@ class DHPCTIndividual:
                 # Highest level: reference comes from external reference input
                 reference_input = references_input
             else:
-                # Lower levels: reference comes from output of level above
-                # This now works because we're building top-down and higher levels exist
+                # Lower levels: reference comes from OUTPUT of level above (outputs flow down)
                 reference_input = output_layer_outputs[level_idx + 1]
             
             # Create reference layer (weighted sum with activation)
@@ -248,15 +239,18 @@ class DHPCTIndividual:
             reference_outputs[level_idx] = reference
             
             # === COMPARATOR LAYER ===
-            # Subtract perception from reference (error = reference - perception)
+            # T016: Subtract perception from reference (error = reference - perception)
             comparator = layers.Subtract(name=f'CL{level_name}')([reference, perception_outputs[level_idx]])
             comparator_outputs[level_idx] = comparator
             
             # === OUTPUT LAYER ===
-            # Element-wise multiplication with learnable weights
-            # For now, we'll use a simpler approach: just pass through the comparator
-            # This will be enhanced in later tasks to support proper weighted outputs
-            output_layer_outputs[level_idx] = comparator
+            # T017: Element-wise multiplication with learnable weights (FR-020)
+            output = ElementWiseMultiplyLayer(
+                units=num_units,
+                weight_initializer=self._get_weight_initializer(self.weight_types[level_idx]),
+                name=f'OL{level_name}'
+            )(comparator)
+            output_layer_outputs[level_idx] = output
         
         # Connect actions to the output of level 0
         # and errors to all comparator outputs
