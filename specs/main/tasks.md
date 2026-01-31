@@ -59,10 +59,10 @@
 - [X] T013 [US1] Implement DHPCTIndividual.compile() to build Keras Functional API model in nbs/00_individual.ipynb
 - [X] T014 [US1] Create perception layers (PL##) with correct inputs per level in nbs/00_individual.ipynb
 - [X] T015 [US1] Create reference layers (RL##) with correct inputs per level in nbs/00_individual.ipynb
-- [ ] T016 [US1] Create comparator layers (CL##) computing reference minus perception in nbs/00_individual.ipynb
-- [ ] T017 [US1] Create output layers (OL##) computing weighted comparator values in nbs/00_individual.ipynb
-- [ ] T018 [US1] Connect Level 0 to Observations input and Actions output in nbs/00_individual.ipynb
-- [ ] T019 [US1] Connect all comparators to Errors output in nbs/00_individual.ipynb
+- [X] T016 [US1] Create comparator layers (CL##) computing reference minus perception in nbs/00_individual.ipynb
+- [X] T017 [US1] Create output layers (OL##) computing weighted comparator values in nbs/00_individual.ipynb
+- [X] T018 [US1] Connect Level 0 to Observations input and Actions output in nbs/00_individual.ipynb
+- [X] T019 [US1] Connect all comparators to Errors output in nbs/00_individual.ipynb
 - [ ] T020 [US1] Implement weight initialization for float, boolean, and ternary types in nbs/00_individual.ipynb
 - [ ] T021 [US1] Implement DHPCTIndividual.run() with environment interaction loop in nbs/00_individual.ipynb
 - [ ] T022 [US1] Add early_termination support to run() method in nbs/00_individual.ipynb
