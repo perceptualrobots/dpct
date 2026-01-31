@@ -376,8 +376,72 @@ class DHPCTIndividual:
         if self.model is None:
             raise RuntimeError("Individual must be compiled before running")
         
-        # TODO: Implement environment execution (T021)
-        pass
+        # T021: Implement environment execution with interaction loop
+        try:
+            env = gym.make(self.env_name, render_mode='human' if render else None)
+        except Exception as e:
+            raise EnvironmentError(f"Failed to create environment '{self.env_name}': {e}")
+        
+        # Initialize reference inputs (zeros for now - can be made configurable)
+        ref_dim = sum(self.levels[1:]) if len(self.levels) > 1 else self.levels[0]
+        references = np.zeros((1, ref_dim), dtype=np.float32)
+        
+        # Reset environment
+        observation, info = env.reset()
+        observation = observation.reshape(1, -1).astype(np.float32)
+        
+        # Track cumulative reward as fitness
+        total_reward = 0.0
+        step_count = 0
+        done = False
+        terminated = False
+        truncated = False
+        
+        # T021: Main execution loop
+        while step_count < steps:
+            # Get actions from model
+            actions_output, errors_output = self.model.predict(
+                [observation, references],
+                verbose=0
+            )
+            
+            # Extract action from output
+            action = actions_output[0]
+            
+            # Handle discrete vs continuous action spaces
+            if hasattr(env.action_space, 'n'):
+                # Discrete action space
+                action = int(np.argmax(action))
+            else:
+                # Continuous action space
+                action = action.flatten()
+            
+            # Take step in environment
+            step_result = env.step(action)
+            
+            # Unpack result (Gymnasium returns 5-tuple)
+            if len(step_result) == 5:
+                observation, reward, terminated, truncated, info = step_result
+                done = terminated or truncated
+            else:
+                # Fallback for older gym interface
+                observation, reward, done, info = step_result
+                terminated = done
+                truncated = False
+            
+            observation = observation.reshape(1, -1).astype(np.float32)
+            total_reward += reward
+            step_count += 1
+            
+            # T022: Early termination support
+            if early_termination and done:
+                break
+        
+        env.close()
+        
+        # T023: Store and return fitness
+        self.fitness = total_reward
+        return total_reward
     
     def config(self) -> Dict[str, Any]:
         """
